@@ -797,7 +797,7 @@ function renderNav() {
   $("#trkMark").style.background = ct ? trackerColor(ct) : ""; $("#trkMark").style.color = ct ? "#fff" : "";
   $("#trkPop").innerHTML = trackerList().map(t => `<button type="button" data-trk="${esc(t.id)}"><span class="mini" style="background:${trackerColor(t)}">${esc(t.short || shortOf(t.name))}</span><span>${esc(t.name)}</span><span class="sub">${sheetList(t.id).length} sheets</span></button>`).join("") +
     `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
-  $("#navHome").innerHTML = `<button type="button" data-home aria-current="${S.view === "home"}"><span class="dot" style="background:var(--amber)"></span><span class="nm">Overview</span></button>`;
+  $("#navHome").innerHTML = "";
   $("#nav").innerHTML = sheetList().map((s, i) => `<button type="button" data-sheet="${esc(s.id)}" aria-current="${S.view === "sheet" && S.sheetId === s.id}"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rowsOf(s.id).length}</span></button>`).join("");
 }
 function render() {
@@ -805,6 +805,7 @@ function render() {
   const main = $("#main");
   if (!S.ready) { main.innerHTML = `<div class="hero"><h2>Opening your tracker…</h2><p>Fetching sheets and entries.</p></div>`; return; }
   const tw = document.querySelector(".tablewrap"), keep = tw && S.lastSheet === S.sheetId ? [tw.scrollTop, tw.scrollLeft] : null;
+  if (!(S.view === "sheet" && S.sheets[S.sheetId] && tid(S.sheets[S.sheetId]) === (curTracker()?.id))) { const first = sheetList()[0]; if (first) { S.view = "sheet"; S.sheetId = first.id; } else { S.view = "home"; S.sheetId = null; } }
   if (S.view === "sheet" && S.sheets[S.sheetId]) {
     if (S.lastSheet !== S.sheetId) S.sel.clear();
     renderSheet(main); S.lastSheet = S.sheetId;
@@ -825,7 +826,7 @@ function topbar(crumb) {
 function tabsHTML() {
   const ct = curTracker(); if (!ct) return "";
   const list = sheetList();
-  return `<nav class="tabs" aria-label="Sheets"><button type="button" class="tab" data-home aria-selected="${S.view === "home"}"><span class="dot" style="background:var(--amber)"></span>Overview</button>${list.map((s, i) => {
+  return `<nav class="tabs" aria-label="Sheets">${list.map((s, i) => {
     const rs = rowsOf(s.id), red = rs.filter(r => { const st = rowState(s, r); return st.imp || st.breach; }).length;
     return `<span class="tabw" draggable="true" data-dragsheet="${esc(s.id)}"><button type="button" class="tab" data-sheet="${esc(s.id)}" aria-selected="${S.view === "sheet" && S.sheetId === s.id}" title="${esc(s.name)} · drag to reorder"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rs.length}</span>${red ? `<span class="red" title="${red} important or past ETA">${red}</span>` : ""}</button></span>`;
   }).join("")}<button type="button" class="tab add" data-act="newsheet" title="New sheet">${ICON.plus}</button></nav>`;
@@ -1107,7 +1108,7 @@ function renderSheet(main) {
       <button class="btn ${S.onlyRed[sh.id] ? "on" : ""}" type="button" data-act="onlyred">${S.onlyRed[sh.id] ? "Show all entries" : "Show only these"}</button>
       ${unflagged.length ? `<button class="btn" type="button" data-act="markred">${ICON.flag} Mark ${unflagged.length === breached.length ? "all" : unflagged.length} as important</button>` : ""}</div>` : "";
 
-  main.innerHTML = topbar(`<span style="color:${trackerColor(curTracker())}">●</span> <button type="button" class="stamp" data-home style="color:inherit;padding:2px 4px" title="Back to overview">${esc(curTracker()?.name || "")}</button> / <b>${esc(sh.name)}</b>`) + `
+  main.innerHTML = topbar(`<span style="color:${trackerColor(curTracker())}">●</span> <span style="padding:2px 4px">${esc(curTracker()?.name || "")}</span> / <b>${esc(sh.name)}</b>`) + `
   ${noteHTML}
   ${alertHTML}
   <div class="toolbar">
@@ -1117,7 +1118,7 @@ function renderSheet(main) {
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -1636,26 +1637,82 @@ $("#mDelete").onclick = async () => {
 async function pool(tasks, n = 6) { let i = 0; await Promise.all(Array.from({length: n}, async () => { while (i < tasks.length) await tasks[i++](); })); }
 
 /* ---------- Import / export ---------- */
-function inferSheet(name, aoa) {
-  const fmt = v => v instanceof Date ? `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,"0")}-${String(v.getDate()).padStart(2,"0")}` : v == null ? "" : String(v).trim();
-  let rows = aoa.map(r => (r || []).map(fmt)).filter(r => r.some(Boolean));
-  if (!rows.length) return null;
-  let note = "";
-  if (rows.length > 1 && rows[0].filter(Boolean).length === 1 && rows[1].filter(Boolean).length > 1) { note = rows[0].find(Boolean); rows = rows.slice(1); }
-  const header = rows[0], body = rows.slice(1), width = Math.max(...rows.map(r => r.length));
+const fmtCell = v => { if (v instanceof Date) { const d = new Date(v.getTime() + 12 * 3600e3); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; } return v == null ? "" : String(v).trim(); };
+const filledN = r => r.filter(Boolean).length;
+const looksData = v => /^-?\d+([.,]\d+)?$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
+/* A heading row: one short value, followed by a row that looks like column headings */
+function isHeadingRow(r, next) {
+  if (filledN(r) !== 1 || !next || filledN(next) < 2) return false;
+  const t = r.find(Boolean); if (t.length > 60) return false;
+  const cells = next.filter(Boolean);
+  return cells.every(v => v.length <= 40 && !looksData(v));
+}
+/* Split one Excel tab into blocks: [{title, header, body}] */
+function splitSections(rows) {
+  const out = [], notes = []; let pend = [], cur = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (isHeadingRow(r, rows[i + 1])) { pend.push(r.find(Boolean)); continue; }
+    if (!cur && filledN(r) === 1) { notes.push(r.find(Boolean)); continue; }
+    if (!cur || pend.length) { cur = {titles: pend, header: r, body: []}; out.push(cur); pend = []; continue; }
+    cur.body.push(r);
+  }
+  return {sections: out, notes};
+}
+function buildParsed(name, note, header, body) {
+  const width = Math.max(header.length, ...body.map(r => r.length));
   const keep = []; for (let i = 0; i < width; i++) if (header[i] || body.some(r => r[i])) keep.push(i);
   const columns = keep.map((i, n) => {
     const label = header[i] || `Column ${n + 1}`, vals = body.map(r => r[i]).filter(Boolean), avg = vals.reduce((s, v) => s + v.length, 0) / Math.max(1, vals.length), distinct = [...new Set(vals)];
     let type = "text";
     if (vals.length && vals.every(v => /^\d{4}-\d{2}-\d{2}$/.test(v))) type = "date";
-    else if (/^(sr|sl|s\.?no)/i.test(label) && vals.every(v => /^\d+$/.test(v))) type = "number";
+    else if (vals.length && vals.every(v => /^-?\d+(\.\d+)?$/.test(v))) type = "number";
     else if (avg > 55) type = "long";
-    else if (distinct.length <= 8 && vals.length > distinct.length && avg < 30 && !/aging|owner|name/i.test(label)) type = "select";
+    else if (distinct.length <= 8 && vals.length > distinct.length && avg < 30 && !/aging|owner|name|email|mail|remark|desc/i.test(label)) type = "select";
     const c = {id: uid("c"), label, type}; if (type === "select") c.options = distinct.sort(); return c;
   });
-  const firstDate = columns.find(c => c.type === "date");
-  columns.forEach(c => { if (firstDate && /aging|ageing|days open/i.test(c.label) && c.type !== "date") { c.type = "calc"; c.calc = {kind: "aging", a: firstDate.id, warn: 15, alert: 30}; delete c.options; } });
+  const dates = columns.filter(c => c.type === "date"), firstDate = dates[0];
+  const dueDate = dates.find(c => /expir|due|eta|target|renew|deadline|valid/i.test(c.label)) || dates[dates.length - 1];
+  columns.forEach(c => {
+    if (c.type === "date") return;
+    if (firstDate && /aging|ageing|days open/i.test(c.label)) { c.type = "calc"; c.calc = {kind: "aging", a: firstDate.id, warn: 15, alert: 30}; delete c.options; }
+    else if (dueDate && /days?\b.*\b(to|left|remain|until|before)\b|days?\s*(to\s*)?(expir|due)/i.test(c.label)) { c.type = "calc"; c.calc = {kind: "due", a: dueDate.id, warn: 30}; delete c.options; }
+  });
   return {name, note, columns, body: body.map(r => { const cells = {}; keep.forEach((i, n) => { if (r[i] && columns[n].type !== "calc") cells[columns[n].id] = r[i]; }); return cells; }).filter(c => Object.keys(c).length)};
+}
+/* Returns one or more sheets for an Excel tab */
+function inferSheets(name, aoa) {
+  const rows = aoa.map(r => (r || []).map(fmtCell)).filter(r => r.some(Boolean));
+  if (!rows.length) return [];
+  const {sections, notes} = splitSections(rows);
+  if (!sections.length) return [];
+  if (sections.length === 1) { const sc = sections[0]; return [buildParsed(name, [...notes, ...sc.titles].filter(t => t.toLowerCase() !== name.toLowerCase()).join(" · "), sc.header, sc.body)]; }
+  const lead = [...notes, ...(sections[0].titles.length > 1 ? sections[0].titles.slice(0, -1) : [])].filter(t => t.toLowerCase() !== name.toLowerCase());
+  return sections.map((sc, k) => {
+    const title = sc.titles[sc.titles.length - 1] || `${name} ${k + 1}`;
+    return buildParsed(title, `From “${name}”${lead.length ? " · " + lead.join(" · ") : ""}`, sc.header, sc.body);
+  });
+}
+function inferSheet(name, aoa) { return inferSheets(name, aoa)[0] || null; }
+/* Re-split an existing sheet that was imported as one block */
+async function splitExistingSheet() {
+  const sid = S.sheetId, sh = S.sheets[sid]; if (!sh) return;
+  const cols = sh.columns || [], rows = rowsOf(sid);
+  const generic = cols.slice(1).every(c => /^Column \d+$/.test(c.label));
+  const aoa = [generic ? [cols[0]?.label || ""] : cols.map(c => c.label), ...rows.map(r => cols.map(c => c.type === "calc" ? "" : ((r.cells || {})[c.id] || "")))];
+  const parts = inferSheets(sh.name, aoa);
+  if (parts.length < 2) { toast("No section headings found in this sheet"); return; }
+  const snaps = snap("sheets", [sid]).concat(snap("rows", rows.map(r => r.id)));
+  let order = sh.order || 0; const names = new Set(sheetList().map(s => s.name)), now = new Date().toISOString(), tasks = [], newIds = [];
+  for (const pt of parts) {
+    let nm = pt.name, k = 2; while (names.has(nm)) nm = `${pt.name} (${k++})`; names.add(nm);
+    const nid = uid("s"); newIds.push(nid); order += 0.01;
+    snaps.push(["sheets", nid, null]);
+    await store.put("sheets", nid, {name: nm, note: pt.note, order, columns: pt.columns, trackerId: tid(sh)});
+    pt.body.forEach((cells, i) => { const rid = uid("r") + i; snaps.push(["rows", rid, null]); tasks.push(() => store.put("rows", rid, {sheetId: nid, order: i + 1, cells, updatedAt: now})); });
+  }
+  await pool(tasks); await pool(rows.map(r => () => store.del("rows", r.id))); await store.del("sheets", sid);
+  S.sheetId = newIds[0]; render(); pushUndo(`Split into ${parts.length} sheets: ${parts.map(p => p.name).join(", ")}`, snaps);
 }
 $("#fileIn").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
@@ -1667,13 +1724,12 @@ $("#fileIn").addEventListener("change", async e => {
     const names = new Set(sheetList().map(s => s.name));
     let order = sheetList().reduce((m, s) => Math.max(m, s.order || 0), 0), nRows = 0, nSheets = 0; const tasks = []; const now = new Date().toISOString();
     for (const wsName of wb.SheetNames) {
-      const parsed = inferSheet(wsName.trim(), XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header: 1, raw: true, defval: ""}));
-      if (!parsed) continue;
+      for (const parsed of inferSheets(wsName.trim(), XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header: 1, raw: true, defval: ""}))) {
       let nm = parsed.name, k = 2; while (names.has(nm)) nm = `${parsed.name} (${k++})`; names.add(nm);
       const sid = uid("s"); order++; nSheets++;
       await store.put("sheets", sid, {name: nm, note: parsed.note, order, columns: parsed.columns, trackerId: curTracker()?.id || "bcp"});
       parsed.body.forEach((cells, i) => { const rid = uid("r") + i; nRows++; tasks.push(() => store.put("rows", rid, {sheetId: sid, order: i + 1, cells, updatedAt: now})); });
-    }
+    } }
     await pool(tasks);
     toast(`Imported ${nSheets} sheets and ${nRows} entries`); render();
   } catch (err) { toast("Couldn't read that file. Is it an Excel workbook?"); }
@@ -1981,6 +2037,7 @@ document.addEventListener("click", e => {
     case "paste": openPaste(""); break;
     case "holidays": openHolidays(); break;
     case "backup": openBackup(); break;
+    case "splitsec": splitExistingSheet(); break;
     case "bulkset": openBulkSet(); break;
     case "bulkimp": case "bulkunimp": bulkUpdate(r => ({...r, imp: b.dataset.act === "bulkimp"}), b.dataset.act === "bulkimp" ? "marked important" : "unmarked"); break;
     case "bulkdel": bulkDelete(); break;
