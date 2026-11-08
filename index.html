@@ -401,6 +401,32 @@ tbody tr.sel td{background:color-mix(in srgb,var(--accent-soft) 70%,var(--surfac
 :root[data-contrast="max"] .inp,:root[data-contrast="high"] .inp{border-color:var(--muted)}
 :root[data-contrast="max"] .btn{border-color:var(--muted)}
 :root[data-contrast="max"] th{color:var(--ink)}
+/* Grid (Excel-style) */
+.gridbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-height:46px;font-size:13.5px}
+.gridbar .hint{margin:0}
+.gdot{width:9px;height:9px;border-radius:50%;background:var(--amber);display:inline-block;flex:none}
+.xlwrap{border-radius:10px}
+table.xl{border-collapse:collapse;font-size:13.5px;width:max-content;min-width:100%}
+table.xl th{position:sticky;top:0;z-index:2;background:var(--surface-2);border:1px solid var(--line);padding:6px 8px;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--ink);font-weight:700;white-space:nowrap;text-align:left}
+table.xl th .L{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);font-weight:500;text-align:center;margin-bottom:2px}
+table.xl td{border:1px solid var(--line);padding:0;background:var(--surface);vertical-align:middle}
+table.xl td.rn,table.xl th.rn{position:sticky;left:0;z-index:1;background:var(--surface-2);width:64px;min-width:64px;text-align:right;padding:0 8px;font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+table.xl th.rn{z-index:3}
+table.xl td.rn{display:table-cell}
+table.xl td.rn .rowck{margin:0 6px 0 0;vertical-align:middle}
+table.xl .gc{all:unset;box-sizing:border-box;display:block;width:100%;padding:7px 9px;font:inherit;color:var(--ink);background:transparent;min-height:34px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+table.xl .gc:focus{background:var(--surface);box-shadow:inset 0 0 0 2px var(--accent);text-overflow:clip}
+table.xl td.dirty{background:color-mix(in srgb,#FFD54A 32%,var(--surface))}
+table.xl td.gcalc{padding:7px 9px;color:var(--muted);font-family:var(--f-mono);font-size:12.5px;background:color-mix(in srgb,var(--surface-2) 50%,var(--surface));white-space:nowrap}
+table.xl td.gcalc.t-bad{color:var(--bad);font-weight:700} table.xl td.gcalc.t-warn{color:var(--warn);font-weight:600} table.xl td.gcalc.t-good{color:var(--good)}
+table.xl .g-long{width:340px;min-width:340px} table.xl .g-text{width:190px;min-width:190px} table.xl .g-select{width:150px;min-width:150px} table.xl .g-date{width:130px;min-width:130px} table.xl .g-number{width:90px;min-width:90px} table.xl .g-calc{width:150px;min-width:150px}
+table.xl .g-number .gc{text-align:right;font-family:var(--f-mono)}
+table.xl .g-date .gc{font-family:var(--f-mono);font-size:12.5px}
+table.xl tr.imp td:not(.rn),table.xl tr.breach td:not(.rn){background:color-mix(in srgb,var(--bad-bg) 60%,var(--surface))}
+table.xl tr.imp td.dirty,table.xl tr.breach td.dirty{background:color-mix(in srgb,#FFD54A 32%,var(--surface))}
+table.xl tr.gnew td.rn{color:var(--accent);font-weight:700}
+table.xl tr.gnew td:not(.rn):not(.dirty){background:color-mix(in srgb,var(--accent-soft) 25%,var(--surface))}
+table.xl tbody tr:hover td.dirty{background:color-mix(in srgb,#FFD54A 40%,var(--surface))}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -752,7 +778,7 @@ function startSync() {
       S[kind] = map; got[kind] = true;
       if (got.sheets && got.rows && got.trackers && !S.ready) { clearTimeout(timer); S.ready = true; setSync("ok", "Live · all changes saved"); }
       if (S.sheetId && !S.sheets[S.sheetId] && got.sheets) { S.view = "home"; S.sheetId = null; }
-      if (!drawerOpen() && !CP && !CM && $("#dlg").hidden && $("#modal").hidden) soon(); else renderNav();
+      if (!drawerOpen() && !CP && !CM && !gridHasFocus() && $("#dlg").hidden && $("#modal").hidden) soon(); else renderNav();
     }, err => { clearTimeout(timer); setSync("offline", err.code === "PERMISSION_DENIED" ? "No access · check database rules" : "Sync stopped: " + err.message); S.ready = true; render(); if (err.code === "PERMISSION_DENIED") toast("Your account can't read this database. Ask the owner to allow your email in the database rules."); });
   }
 }
@@ -808,7 +834,9 @@ function render() {
   if (!(S.view === "sheet" && S.sheets[S.sheetId] && tid(S.sheets[S.sheetId]) === (curTracker()?.id))) { const first = sheetList()[0]; if (first) { S.view = "sheet"; S.sheetId = first.id; } else { S.view = "home"; S.sheetId = null; } }
   if (S.view === "sheet" && S.sheets[S.sheetId]) {
     if (S.lastSheet !== S.sheetId) S.sel.clear();
+    const gf = document.activeElement?.classList?.contains("gc") ? [document.activeElement.dataset.ri, document.activeElement.dataset.ci, document.activeElement.selectionStart] : null;
     renderSheet(main); S.lastSheet = S.sheetId;
+    if (gf) { const t = document.querySelector(`.gc[data-ri="${gf[0]}"][data-ci="${gf[1]}"]`); if (t) { t.focus({preventScroll: true}); try { t.setSelectionRange(gf[2], gf[2]); } catch (e) {} } }
     const at = document.querySelector('.tab[aria-selected="true"]'); if (at) { const tb = at.closest(".tabs"); const l = at.offsetLeft - tb.offsetLeft; if (l < tb.scrollLeft || l + at.offsetWidth > tb.scrollLeft + tb.clientWidth) tb.scrollLeft = l - 16; }
     const n = document.querySelector(".tablewrap"); if (keep && n) { n.scrollTop = keep[0]; n.scrollLeft = keep[1]; }
     return;
@@ -828,7 +856,7 @@ function tabsHTML() {
   const list = sheetList();
   return `<nav class="tabs" aria-label="Sheets">${list.map((s, i) => {
     const rs = rowsOf(s.id), red = rs.filter(r => { const st = rowState(s, r); return st.imp || st.breach; }).length;
-    return `<span class="tabw" draggable="true" data-dragsheet="${esc(s.id)}"><button type="button" class="tab" data-sheet="${esc(s.id)}" aria-selected="${S.view === "sheet" && S.sheetId === s.id}" title="${esc(s.name)} · drag to reorder"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rs.length}</span>${red ? `<span class="red" title="${red} important or past ETA">${red}</span>` : ""}</button></span>`;
+    return `<span class="tabw" draggable="true" data-dragsheet="${esc(s.id)}"><button type="button" class="tab" data-sheet="${esc(s.id)}" aria-selected="${S.view === "sheet" && S.sheetId === s.id}" title="${esc(s.name)} · drag to reorder"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rs.length}</span>${gridDirtyCount(s.id) ? `<span class="gdot" title="Unsaved grid edits"></span>` : ""}${red ? `<span class="red" title="${red} important or past ETA">${red}</span>` : ""}</button></span>`;
   }).join("")}<button type="button" class="tab add" data-act="newsheet" title="New sheet">${ICON.plus}</button></nav>`;
 }
 function greet() { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; }
@@ -1090,8 +1118,10 @@ function renderSheet(main) {
   const maxLate = breached.reduce((m, r) => Math.max(m, states.get(r.id).late), 0);
   const tc = titleCol(sh), sc = statusCol(sh);
   let body;
-  if (!all.length) body = `<div class="emptystate"><h3>This sheet is ready for its first entry</h3><p>${cols.length} columns set up: ${esc(cols.map(c => c.label).join(", "))}.</p><div class="row2" style="justify-content:center;flex:none"><button class="btn primary" type="button" data-act="add" style="flex:none">${ICON.plus} Add the first entry</button><button class="btn" type="button" data-act="paste" style="flex:none">Paste rows from Excel</button></div></div>`;
+  if (!all.length && layout === "grid") body = renderGrid(sh, rows, cols);
+  else if (!all.length) body = `<div class="emptystate"><h3>This sheet is ready for its first entry</h3><p>${cols.length} columns set up: ${esc(cols.map(c => c.label).join(", "))}.</p><div class="row2" style="justify-content:center;flex:none"><button class="btn primary" type="button" data-act="add" style="flex:none">${ICON.plus} Add the first entry</button><button class="btn" type="button" data-act="paste" style="flex:none">Paste rows from Excel</button></div></div>`;
   else if (!rows.length) body = `<div class="emptystate"><h3>Nothing matches</h3><p>Try a different search or clear the filters.</p><button class="btn" type="button" data-act="clear">Clear search &amp; filters</button></div>`;
+  else if (layout === "grid") body = renderGrid(sh, rows, cols);
   else if (layout === "cards") body = `<div class="cards">${rows.map(r => {
       const c = r.cells || {}, st = states.get(r.id), rest = cols.filter(x => x !== tc && x !== sc && c[x.id]);
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
@@ -1113,12 +1143,12 @@ function renderSheet(main) {
   ${alertHTML}
   <div class="toolbar">
     <label class="search">${ICON.search}<input id="q" type="search" placeholder="Search ${esc(sh.name)}…" value="${esc(S.q)}" aria-label="Search entries"></label>
-    <div class="seg" role="group" aria-label="Layout"><button type="button" data-layout="table" aria-pressed="${layout === "table"}">Table</button><button type="button" data-layout="cards" aria-pressed="${layout === "cards"}">Cards</button></div>
+    <div class="seg" role="group" aria-label="Layout"><button type="button" data-layout="table" aria-pressed="${layout === "table"}">Table</button><button type="button" data-layout="cards" aria-pressed="${layout === "cards"}">Cards</button><button type="button" data-layout="grid" aria-pressed="${layout === "grid"}" title="Edit like Excel">Grid</button></div>
     <button class="btn" type="button" data-act="filter">${ICON.filter}<span class="bl">Filter</span>${flist.length ? ` <span class="badge">${flist.length}</span>` : ""}</button>
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -1721,6 +1751,7 @@ $("#fileIn").addEventListener("change", async e => {
   try {
     toast("Reading " + f.name + "…");
     const wb = XLSX.read(await f.arrayBuffer(), {type: "array", cellDates: true});
+    if (wb.SheetNames.includes("_tracker_meta")) { openExcelUpdate(wb, f.name); return; }
     const names = new Set(sheetList().map(s => s.name));
     let order = sheetList().reduce((m, s) => Math.max(m, s.order || 0), 0), nRows = 0, nSheets = 0; const tasks = []; const now = new Date().toISOString();
     for (const wsName of wb.SheetNames) {
@@ -1734,6 +1765,174 @@ $("#fileIn").addEventListener("change", async e => {
     toast(`Imported ${nSheets} sheets and ${nRows} entries`); render();
   } catch (err) { toast("Couldn't read that file. Is it an Excel workbook?"); }
 });
+/* ---------- Upload edits from an exported Excel ---------- */
+function openExcelUpdate(wb, fname) {
+  const meta = XLSX.utils.sheet_to_json(wb.Sheets._tracker_meta, {header: 1, defval: ""}).slice(1).filter(r => r[0] && r[1]);
+  const plan = [];
+  for (const [tab, sid] of meta) {
+    const sh = S.sheets[sid], ws = wb.Sheets[tab];
+    if (!sh || !ws) { plan.push({tab, missing: true}); continue; }
+    const cols = (sh.columns || []).filter(c => c.type !== "calc");
+    const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, raw: true, defval: ""}).map(r => r.map(fmtCell));
+    const hi = aoa.findIndex(r => r.includes("Row ID")); if (hi < 0) { plan.push({tab, missing: true}); continue; }
+    const head = aoa[hi], ridI = head.indexOf("Row ID");
+    const map = head.map(h => cols.find(c => c.label === h) || null);
+    const updates = [], creates = []; let changed = 0;
+    for (const row of aoa.slice(hi + 1)) {
+      const cells = {}; let any = false;
+      map.forEach((c, j) => { if (!c) return; let v = String(row[j] ?? "").trim(); if (v) any = true; if (c.type === "date" && v) v = normDate(v); if (c.type === "number") v = v.replace(/,/g, ""); cells[c.id] = v; });
+      if (!any) continue;
+      const rid = String(row[ridI] || "").trim(), cur = rid && S.rows[rid] && S.rows[rid].sheetId === sid ? S.rows[rid] : null;
+      if (cur) {
+        const diff = Object.keys(cells).filter(k => String(cells[k] || "") !== String((cur.cells || {})[k] || ""));
+        if (diff.length) { changed += diff.length; const merged = {...(cur.cells || {})}; diff.forEach(k => { if (cells[k]) merged[k] = cells[k]; else delete merged[k]; }); updates.push({rid, cells: merged}); }
+      } else { Object.keys(cells).forEach(k => { if (!cells[k]) delete cells[k]; }); creates.push(cells); }
+    }
+    plan.push({tab, sid, name: sh.name, updates, creates, changed});
+  }
+  const total = plan.reduce((m, p) => m + (p.updates?.length || 0) + (p.creates?.length || 0), 0);
+  openDialog({
+    eyebrow: fname, title: "Upload edits from Excel", saveLabel: total ? `Apply ${total} change${total === 1 ? "" : "s"}` : "Close",
+    body: () => `<p class="hint" style="margin:0">This file was downloaded from the tracker. Here's what changed:</p>
+      <div class="group">${plan.map(p => p.missing ? `<div class="ck"><span>${esc(p.tab)}</span><span class="n" style="color:var(--warn)">sheet not found, skipped</span></div>`
+        : `<div class="ck"><b>${esc(p.name)}</b><span class="n">${p.updates.length} updated (${p.changed} cells) · ${p.creates.length} new</span></div>`).join("")}</div>
+      ${total ? `<span class="hint">Rows you deleted in Excel are not deleted here. Calculated columns (Aging, Days left) are ignored and recalculate on their own.</span>` : `<div class="banner">No changes found compared with the tracker.</div>`}`,
+    onSave: async () => {
+      if (!total) return;
+      const now = new Date().toISOString(), snaps = [], tasks = [];
+      for (const p of plan) { if (p.missing) continue;
+        p.updates.forEach(u => { snaps.push(["rows", u.rid, clone(S.rows[u.rid])]); tasks.push(() => store.put("rows", u.rid, {...S.rows[u.rid], cells: u.cells, updatedAt: now})); });
+        let order = rowsOf(p.sid).reduce((m, r) => Math.max(m, r.order || 0), 0);
+        const srC = (S.sheets[p.sid].columns || []).filter(c => c.type === "number" && /^(sr|sl|s\.?no|#|no)/i.test(c.label)), srM = {};
+        srC.forEach(c => { srM[c.id] = rowsOf(p.sid).reduce((m, r) => Math.max(m, +(r.cells || {})[c.id] || 0), 0); });
+        p.creates.forEach((cells, i) => { srC.forEach(c => { if (!cells[c.id]) cells[c.id] = String(++srM[c.id]); }); const id = uid("r") + i; snaps.push(["rows", id, null]); const o = ++order; tasks.push(() => store.put("rows", id, {sheetId: p.sid, order: o, cells, updatedAt: now})); });
+        const sh = S.sheets[p.sid], add = {};
+        [...p.updates.map(u => u.cells), ...p.creates].forEach(cells => (sh.columns || []).forEach(c => { if (c.type === "select" && cells[c.id] && !(c.options || []).includes(cells[c.id])) (add[c.id] = add[c.id] || new Set()).add(cells[c.id]); }));
+        if (Object.keys(add).length) { snaps.push(["sheets", p.sid, clone(sh)]); store.put("sheets", p.sid, {...sh, columns: sh.columns.map(c => add[c.id] ? {...c, options: [...(c.options || []), ...add[c.id]]} : c)}); }
+      }
+      await pool(tasks, 10); render(); pushUndo(`${total} change${total === 1 ? "" : "s"} uploaded from Excel`, snaps);
+    }
+  });
+}
+
+/* ---------- Grid (Excel-style) editing ---------- */
+S.gedits = {}; S.gnew = {};
+const colLetter = i => { let s = ""; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - m) / 26); } return s; };
+const gDisplay = (c, v) => c.type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v || "") ? fmtDate(v) : (v || "");
+const gNorm = (c, v) => { v = String(v ?? "").trim(); if (c.type === "date" && v) return normDate(v); if (c.type === "number") return v.replace(/,/g, ""); return v; };
+function gridDirtyCount(sid) { const E = S.gedits[sid] || {}, N = S.gnew[sid] || []; return Object.values(E).reduce((m, o) => m + Object.keys(o).length, 0) + N.filter(n => Object.values(n.cells).some(Boolean)).length; }
+function gridBarHTML(sid) {
+  const n = gridDirtyCount(sid);
+  return n ? `<span class="gdot"></span><b>${n} unsaved change${n === 1 ? "" : "s"}</b><span class="hint">Yellow cells are edited. Ctrl+S saves.</span><span style="flex:1"></span><button class="btn ghost" type="button" data-act="gdiscard">Discard</button><button class="btn primary" type="button" data-act="gsave">Save changes</button>`
+    : `<span class="hint">Click a cell and type, like Excel. Enter/Tab/arrows move, Esc undoes the cell, paste blocks from Excel, type in the last row to add entries.</span>`;
+}
+function renderGrid(sh, rows, cols) {
+  const E = S.gedits[sh.id] = S.gedits[sh.id] || {}, N = S.gnew[sh.id] = S.gnew[sh.id] || [];
+  const lists = cols.filter(c => c.type === "select").map(c => `<datalist id="dl_${esc(c.id)}">${(c.options || []).map(o => `<option value="${esc(o)}">`).join("")}</datalist>`).join("");
+  const cell = (key, r, c, ri, ci) => {
+    if (c.type === "calc") { if (!r) return `<td class="gcalc"></td>`; const v = calcCell(sh, c, r); return `<td class="gcalc ${v.t && v.t !== "plain" ? "t-" + v.t : ""}" title="Calculated automatically">${esc(v.text)}</td>`; }
+    const edited = r ? E[r.id] && E[r.id][c.id] !== undefined : false;
+    const v = r ? (edited ? E[r.id][c.id] : (r.cells || {})[c.id]) : (N[key]?.cells[c.id] || "");
+    const dirty = edited || (!r && v);
+    return `<td class="${dirty ? "dirty" : ""} g-${c.type}"><input class="gc" data-k="${esc(r ? r.id : "new:" + key)}" data-c="${esc(c.id)}" data-ri="${ri}" data-ci="${ci}" value="${esc(gDisplay(c, v))}" ${c.type === "select" ? `list="dl_${esc(c.id)}"` : ""} aria-label="${esc(c.label)} row ${ri + 1}" autocomplete="off" spellcheck="false"></td>`;
+  };
+  let ri = 0;
+  const body = rows.map(r => { const st = rowState(sh, r); const tr = `<tr class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}"><td class="rn"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><span>${ri + 1}</span></td>${cols.map((c, ci) => cell(null, r, c, ri, ci)).join("")}</tr>`; ri++; return tr; }).join("")
+    + [...N.map((n, k) => k), N.length].map(k => { const tr = `<tr class="gnew"><td class="rn"><span>${k === N.length ? "+" : "new"}</span></td>${cols.map((c, ci) => cell(k, null, c, ri, ci)).join("")}</tr>`; ri++; return tr; }).join("");
+  return `<div class="gridbar" id="gridbar">${gridBarHTML(sh.id)}</div><div class="tablewrap xlwrap">${lists}<table class="xl"><thead><tr><th class="rn"></th>${cols.map((c, i) => `<th class="g-${c.type}" title="${esc(c.label)}"><span class="L">${colLetter(i)}</span>${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+function gSet(sid, key, c, raw) {
+  const v = gNorm(c, raw);
+  if (key.startsWith("new:")) { const k = +key.slice(4), N = S.gnew[sid]; while (N.length <= k) N.push({cells: {}}); N[k].cells[c.id] = v; return; }
+  const E = S.gedits[sid], orig = (S.rows[key]?.cells || {})[c.id] || "";
+  E[key] = E[key] || {};
+  if (v === orig) { delete E[key][c.id]; if (!Object.keys(E[key]).length) delete E[key]; } else E[key][c.id] = v;
+}
+function gFocus(ri, ci) {
+  const t = document.querySelector(`.gc[data-ri="${ri}"][data-ci="${ci}"]`);
+  if (t) { t.focus({preventScroll: false}); t.select(); return true; }
+  return false;
+}
+function gMove(inp, dr, dc) {
+  const ri = +inp.dataset.ri, ci = +inp.dataset.ci, cols = (S.sheets[S.sheetId]?.columns || []).length;
+  if (dr) { gFocus(ri + dr, ci); return; }
+  for (let c = ci + dc; c >= 0 && c < cols; c += dc) if (gFocus(ri, c)) return;
+  if (dc > 0) for (let c = 0; c < cols; c++) if (gFocus(ri + 1, c)) return;
+}
+function gRefreshAfter(inp, structural) {
+  const sid = S.sheetId, td = inp.closest("td");
+  const key = inp.dataset.k, cid = inp.dataset.c;
+  const dirty = key.startsWith("new:") ? !!inp.value.trim() : !!(S.gedits[sid][key] && S.gedits[sid][key][cid] !== undefined);
+  td.classList.toggle("dirty", dirty);
+  const bar = $("#gridbar"); if (bar) bar.innerHTML = gridBarHTML(sid);
+  if (structural) { const pos = [+inp.dataset.ri, +inp.dataset.ci]; render(); const t = document.querySelector(`.gc[data-ri="${pos[0]}"][data-ci="${pos[1]}"]`); if (t) { t.focus({preventScroll: true}); const L = t.value.length; try { t.setSelectionRange(L, L); } catch (e) {} } }
+}
+document.addEventListener("input", e => {
+  const inp = e.target; if (!inp.classList?.contains("gc")) return;
+  const sh = S.sheets[S.sheetId], c = (sh.columns || []).find(x => x.id === inp.dataset.c); if (!c) return;
+  const key = inp.dataset.k, N = S.gnew[S.sheetId] || [];
+  const structural = key === "new:" + N.length && inp.value.trim();
+  gSet(S.sheetId, key, c, inp.value); gRefreshAfter(inp, structural);
+});
+document.addEventListener("change", e => {
+  const inp = e.target; if (!inp.classList?.contains("gc")) return;
+  const c = (S.sheets[S.sheetId]?.columns || []).find(x => x.id === inp.dataset.c);
+  if (c?.type === "date") { const v = gNorm(c, inp.value); inp.value = gDisplay(c, v); }
+});
+document.addEventListener("keydown", e => {
+  const inp = e.target; if (!inp.classList?.contains("gc")) return;
+  const k = e.key;
+  if ((e.ctrlKey || e.metaKey) && (k === "s" || k === "S")) { e.preventDefault(); saveGrid(); return; }
+  if (k === "Enter") { e.preventDefault(); gMove(inp, e.shiftKey ? -1 : 1, 0); return; }
+  if (k === "Tab") { e.preventDefault(); gMove(inp, 0, e.shiftKey ? -1 : 1); return; }
+  if (k === "ArrowDown") { e.preventDefault(); gMove(inp, 1, 0); return; }
+  if (k === "ArrowUp") { e.preventDefault(); gMove(inp, -1, 0); return; }
+  if (k === "ArrowLeft" && inp.selectionStart === 0 && inp.selectionEnd === 0) { e.preventDefault(); gMove(inp, 0, -1); return; }
+  if (k === "ArrowRight" && inp.selectionStart === inp.value.length) { e.preventDefault(); gMove(inp, 0, 1); return; }
+  if (k === "Escape") {
+    e.preventDefault(); e.stopPropagation();
+    const sid = S.sheetId, key = inp.dataset.k, c = (S.sheets[sid].columns || []).find(x => x.id === inp.dataset.c);
+    const orig = key.startsWith("new:") ? "" : (S.rows[key]?.cells || {})[c.id] || "";
+    inp.value = gDisplay(c, orig); gSet(sid, key, c, orig); gRefreshAfter(inp, false); inp.select();
+  }
+}, true);
+document.addEventListener("paste", e => {
+  const inp = e.target; if (!inp.classList?.contains("gc")) return;
+  const t = e.clipboardData?.getData("text/plain") || ""; if (!/[\t\n]/.test(t.replace(/\r?\n$/, ""))) return;
+  e.preventDefault(); e.stopPropagation();
+  const sid = S.sheetId, sh = S.sheets[sid], cols = sh.columns || [], grid = parseTSV(t.replace(/\r?\n$/, ""));
+  const vis = filteredRows({id: sid, ...sh}), r0 = +inp.dataset.ri, c0 = +inp.dataset.ci;
+  grid.forEach((line, i) => line.forEach((val, j) => {
+    const c = cols[c0 + j]; if (!c || c.type === "calc") return;
+    const ri = r0 + i, key = ri < vis.length ? vis[ri].id : "new:" + (ri - vis.length);
+    gSet(sid, key, c, val);
+  }));
+  render(); gFocus(r0, c0); toast(`Pasted ${grid.length} row${grid.length === 1 ? "" : "s"}. Review the yellow cells, then Save.`);
+}, true);
+async function saveGrid() {
+  const sid = S.sheetId, sh = S.sheets[sid]; if (!sh) return;
+  const E = S.gedits[sid] || {}, N = (S.gnew[sid] || []).filter(n => Object.values(n.cells).some(Boolean));
+  if (!Object.keys(E).length && !N.length) { toast("No changes to save"); return; }
+  const now = new Date().toISOString(), snaps = [], tasks = [], add = {};
+  const noteOpt = (c, v) => { if (c.type === "select" && v && !(c.options || []).includes(v)) (add[c.id] = add[c.id] || new Set()).add(v); };
+  let n = 0;
+  for (const [rid, ch] of Object.entries(E)) {
+    const r = S.rows[rid]; if (!r) continue;
+    const cells = {...(r.cells || {})};
+    for (const [cid, v] of Object.entries(ch)) { n++; if (v) cells[cid] = v; else delete cells[cid]; noteOpt((sh.columns || []).find(c => c.id === cid) || {}, v); }
+    snaps.push(["rows", rid, clone(r)]); tasks.push(() => store.put("rows", rid, {...r, cells, updatedAt: now}));
+  }
+  let order = rowsOf(sid).reduce((m, r) => Math.max(m, r.order || 0), 0);
+  const srCols = (sh.columns || []).filter(c => c.type === "number" && /^(sr|sl|s\.?no|#|no)/i.test(c.label)), srMax = {};
+  srCols.forEach(c => { srMax[c.id] = rowsOf(sid).reduce((m, r) => Math.max(m, +(r.cells || {})[c.id] || 0), 0); });
+  N.forEach((nr, i) => { srCols.forEach(c => { if (!nr.cells[c.id]) nr.cells[c.id] = String(++srMax[c.id]); }); const cells = {}; Object.entries(nr.cells).forEach(([cid, v]) => { if (v) { cells[cid] = v; noteOpt((sh.columns || []).find(c => c.id === cid) || {}, v); } }); const id = uid("r") + i, o = ++order; n++; snaps.push(["rows", id, null]); tasks.push(() => store.put("rows", id, {sheetId: sid, order: o, cells, updatedAt: now})); });
+  if (Object.keys(add).length) { snaps.push(["sheets", sid, clone(sh)]); store.put("sheets", sid, {...sh, columns: sh.columns.map(c => add[c.id] ? {...c, options: [...(c.options || []), ...add[c.id]]} : c)}); }
+  S.gedits[sid] = {}; S.gnew[sid] = [];
+  await pool(tasks, 10); render(); pushUndo(`Saved ${n} change${n === 1 ? "" : "s"}${N.length ? ` · ${N.length} new row${N.length === 1 ? "" : "s"}` : ""}`, snaps);
+}
+const gridHasFocus = () => !!document.activeElement?.classList?.contains("gc");
+window.addEventListener("beforeunload", e => { if (Object.keys(S.gedits).some(sid => gridDirtyCount(sid))) { e.preventDefault(); e.returnValue = ""; } });
+
 /* ---------- Generic dialog ---------- */
 let DLG = null;
 function openDialog(o) {
@@ -1872,7 +2071,8 @@ function openExport(preset) {
         <button type="button" class="choice" data-v="done" aria-pressed="false"><b>Completed only</b><span>Closed, Done, Completed, Yes</span></button>
         <button type="button" class="choice" data-v="open" aria-pressed="false"><b>Open only</b><span>WIP, pending, blockers</span></button>
         <button type="button" class="choice" data-v="red" aria-pressed="false"><b>Red items only</b><span>Important + ETA crossed</span></button></div></div>
-      <div class="banner" id="ex_sum"></div>`,
+      <div class="banner" id="ex_sum"></div>
+      <span class="hint">Edit the file in Excel and upload it back with <b>Import Excel</b>: changed cells update the matching entries and new rows are added. Keep the hidden Row ID column.</span>`,
     mount: root => {
       const g = root.querySelector("#ex_rows"); g.dataset.r = "all"; pressGroup(g, ".choice", "r");
       const sel = () => [...root.querySelectorAll("[data-sh]:checked")].map(k => k.dataset.sh);
@@ -1923,8 +2123,8 @@ const xlDate = v => { const d = parseD(v); return d ? (Date.UTC(d.getFullYear(),
 function buildWS(s, rows, trk) {
   const cols = s.columns || [], states = new Map(rows.map(r => [r.id, rowState(s, r)]));
   const hasFlag = rows.some(r => states.get(r.id).imp || states.get(r.id).breach);
-  const out = (hasFlag ? [{id: "__flag", label: "Flag", type: "flag"}] : []).concat(cols);
-  const W = {flag: 14, long: 55, text: 26, select: 18, date: 14, number: 9, calc: 18};
+  const out = (hasFlag ? [{id: "__flag", label: "Flag", type: "flag"}] : []).concat(cols).concat([{id: "__rid", label: "Row ID", type: "rid"}]);
+  const W = {flag: 14, long: 55, text: 26, select: 18, date: 14, number: 9, calc: 18, rid: 12};
   const N = out.length, aoa = [], merges = [], heights = [];
   const C = (v, st, extra) => Object.assign({v, t: typeof v === "number" ? "n" : "s", s: st}, extra || {});
   aoa.push([C(s.name, {font: {bold: true, sz: 16, color: {rgb: XC.ink}}})]); heights.push({hpt: 26}); merges.push({s: {r: 0, c: 0}, e: {r: 0, c: N - 1}});
@@ -1939,6 +2139,7 @@ function buildWS(s, rows, trk) {
     let lines = 1;
     aoa.push(out.map(c => {
       const base = {fill: {fgColor: {rgb: redFill}}, border: border(XC.line), alignment: {wrapText: true, vertical: "top"}, font: {sz: 10, color: {rgb: XC.ink}}};
+      if (c.type === "rid") return C(r.id, {font: {sz: 8, color: {rgb: "9AA5A2"}}});
       if (c.type === "flag") return C(st.imp ? "IMPORTANT" : st.breach ? "ETA CROSSED" : "", {...base, font: {sz: 9, bold: true, color: {rgb: "BF3A31"}}, alignment: {vertical: "top", horizontal: "center"}});
       const raw = (r.cells || {})[c.id] ?? "";
       if (c.type === "date") { const n = xlDate(raw); const late = st.breach && st.etaCols.has(c.id); return n == null ? C(raw, base) : C(n, {...base, numFmt: "dd-mmm-yyyy", alignment: {vertical: "top", horizontal: "center"}, font: {sz: 10, bold: late, color: {rgb: late ? "BF3A31" : XC.ink}}}, {z: "dd-mmm-yyyy"}); }
@@ -1951,7 +2152,7 @@ function buildWS(s, rows, trk) {
     heights.push({hpt: Math.min(180, Math.max(18, 13.5 * lines + 4))});
   });
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!merges"] = merges; ws["!rows"] = heights; ws["!cols"] = out.map(c => ({wch: W[c.type] || 18}));
+  ws["!merges"] = merges; ws["!rows"] = heights; ws["!cols"] = out.map(c => c.type === "rid" ? {wch: 12, hidden: true} : {wch: W[c.type] || 18});
   if (rows.length) ws["!autofilter"] = {ref: XLSX.utils.encode_range({s: {r: hr, c: 0}, e: {r: hr + rows.length, c: N - 1}})};
   return ws;
 }
@@ -1969,7 +2170,7 @@ function buildSummary(list, mode, tmap) {
 }
 async function exportXlsx(ids, mode) {
   if (!window.XLSX) { toast("The Excel writer didn't load. Check your connection."); return false; }
-  const wb = XLSX.utils.book_new(), used = new Set(["Summary"]);
+  const wb = XLSX.utils.book_new(), used = new Set(["Summary", "_tracker_meta"]), meta = [];
   const trkIds = new Set(ids.map(id => tid(S.sheets[id]))), multi = trkIds.size > 1;
   const tmap = Object.fromEntries(trackerList().map(t => [t.id, t]));
   const list = allSheets().filter(s => ids.includes(s.id)).sort((a, b) => (tmap[tid(a)]?.order ?? 0) - (tmap[tid(b)]?.order ?? 0)).map(s => ({s, rows: (() => { const rs = pickRows(s, mode), st = new Map(rs.map(r => [r.id, rowState(s, r)])); return rs.sort((a, b) => (st.get(a.id).imp ? 0 : st.get(a.id).breach ? 1 : 2) - (st.get(b.id).imp ? 0 : st.get(b.id).breach ? 1 : 2)); })()}));
@@ -1977,8 +2178,10 @@ async function exportXlsx(ids, mode) {
   for (const {s, rows} of list) {
     const t = tmap[tid(s)], base = (multi ? `${t?.short || shortOf(t?.name)} - ` : "") + s.name;
     let nm = base.replace(/[\\\/\?\*\[\]:]/g, " ").slice(0, 31).trim() || "Sheet", k = 2; while (used.has(nm)) nm = nm.slice(0, 28) + " " + k++; used.add(nm);
-    XLSX.utils.book_append_sheet(wb, buildWS(s, rows, t), nm);
+    XLSX.utils.book_append_sheet(wb, buildWS(s, rows, t), nm); meta.push([nm, s.id, tid(s)]);
   }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["tab", "sheetId", "trackerId", "note"], ...meta.map(m => [...m, "Used by Bank Project Tracker to upload edits back. Don't change."])]), "_tracker_meta");
+  wb.Workbook = {Sheets: wb.SheetNames.map(n => ({Hidden: n === "_tracker_meta" ? 1 : 0}))};
   const data = new Uint8Array(XLSX.write(wb, {bookType: "xlsx", type: "array", cellStyles: true}));
   const one = ids.length === 1 ? S.sheets[ids[0]].name : null, t0 = tmap[[...trkIds][0]];
   const label = (multi ? "All_Trackers" : `${t0?.short || shortOf(t0?.name)}_${one ? one : "Tracker"}`) + ({done: "_Completed", open: "_Open", red: "_Red_items"}[mode] || "");
@@ -2038,6 +2241,9 @@ document.addEventListener("click", e => {
     case "holidays": openHolidays(); break;
     case "backup": openBackup(); break;
     case "splitsec": splitExistingSheet(); break;
+    case "gsave": saveGrid(); break;
+    case "gdiscard": S.gedits[S.sheetId] = {}; S.gnew[S.sheetId] = []; render(); toast("Unsaved changes discarded"); break;
+    case "xlupdate": $("#fileIn").click(); break;
     case "bulkset": openBulkSet(); break;
     case "bulkimp": case "bulkunimp": bulkUpdate(r => ({...r, imp: b.dataset.act === "bulkimp"}), b.dataset.act === "bulkimp" ? "marked important" : "unmarked"); break;
     case "bulkdel": bulkDelete(); break;
@@ -2060,7 +2266,7 @@ $("#addSheetBtn").onclick = () => curTracker() ? openModal(null) : openTrackerDi
 $("#trkBtn").onclick = () => { const p = $("#trkPop"); p.hidden = !p.hidden; $("#trkBtn").setAttribute("aria-expanded", String(!p.hidden)); };
 document.addEventListener("keydown", e => {
   if (e.target.matches?.("tr[data-row]") && e.key === "Enter") { openDrawer(S.rows[e.target.dataset.row]?.sheetId, e.target.dataset.row); return; }
-  if (e.key === "Escape" && S.full && !document.fullscreenElement && !CM && !CP && $("#dlg").hidden && $("#modal").hidden && !drawerOpen()) { toggleFull(); return; }
+  if (e.key === "Escape" && S.full && !document.fullscreenElement && !CM && !CP && !gridHasFocus() && $("#dlg").hidden && $("#modal").hidden && !drawerOpen()) { toggleFull(); return; }
   if (e.key === "Escape" && CP) { closeCellPop(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z") && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) && $("#dlg").hidden && $("#modal").hidden && !drawerOpen()) { e.preventDefault(); doUndo(); return; }
   if (e.key === "Escape") { if (CM) closeColMenu(); else if (!$("#dlg").hidden) closeDialog(); else if (!$("#modal").hidden) closeModal(); else if (drawerOpen()) closeDrawer(); return; }
