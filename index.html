@@ -525,6 +525,18 @@ tr.addrow button.hidnote{color:var(--muted);font-weight:600;left:auto}
 .sumrow .aitxt:focus{background:var(--accent-soft)}
 .aif label svg,.stamp svg{width:13px;height:13px;vertical-align:-2px}
 .field .lbl>span{display:flex;gap:2px}
+/* Remark column */
+td.rmk{position:relative}
+.rmk-ai{all:unset;cursor:pointer;position:absolute;top:6px;right:6px;width:26px;height:26px;display:grid;place-items:center;border-radius:8px;color:var(--accent);background:var(--surface);border:1px solid var(--line);opacity:0;transition:opacity .12s;z-index:1}
+.rmk-ai svg{width:14px;height:14px}
+td.rmk:hover .rmk-ai,.rmk-ai:focus-visible{opacity:1}
+.rmk-ai:hover{background:var(--accent-soft)}
+@media (hover:none){.rmk-ai{opacity:1}}
+td.rmk .clamp{padding-right:22px}
+.rmkadd{display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb,var(--accent-soft) 35%,var(--surface));border:1px dashed color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:12px;padding:10px}
+.rmkadd .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rmkadd textarea{min-height:64px}
+.rmkpop #rmOut:empty{display:none}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -1243,8 +1255,8 @@ function renderSheet(main) {
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
       return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${rest.filter(x => x.type !== "select").slice(0, 3).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
     }).join("")}</div>`;
-  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
-      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : "Click to edit"}">${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
+  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
+      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"} ${c.id === sh.remarkCol ? "rmk" : ""}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : c.id === sh.remarkCol ? "Click to add an update" : "Click to edit"}">${c.id === sh.remarkCol && AI_ON && (r.cells || {})[c.id] ? `<button type="button" class="rmk-ai" data-rmksum title="AI summary">${ICON.spark}</button>` : ""}${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
 
   const noteHTML = S.noteEdit === sh.id
     ? `<div class="note-edit"><textarea class="inp" id="noteTa" rows="3" placeholder="Add context for this sheet: scope, a reminder, a dependency…">${esc(sh.note || "")}</textarea><div class="acts"><button class="btn primary" type="button" data-act="notesave">Save note</button><button class="btn ghost" type="button" data-act="notecancel">Cancel</button>${sh.note ? `<span class="sp" style="flex:1"></span><button class="btn ghost" type="button" data-act="noteclear" style="color:var(--bad)">Remove note</button>` : ""}</div></div>`
@@ -1265,7 +1277,7 @@ function renderSheet(main) {
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -1455,6 +1467,51 @@ function openHolidays() {
   });
 }
 
+/* ---------- Remark column ---------- */
+const RMK_DATES = {"dd-MMM-yyyy": "07-Nov-2026", "dd MMM yyyy": "07 Nov 2026", "dd-MMM-yy": "07-Nov-26", "dd/MM/yyyy": "07/11/2026", "dd-MM-yyyy": "07-11-2026", "yyyy-MM-dd": "2026-11-07", "MMM dd, yyyy": "Nov 07, 2026"};
+function rmkFmt(sh) { return {date: "dd-MMM-yyyy", tag: "Fable", pos: "top", ...(sh?.remarkFmt || {})}; }
+function fmtStampDate(f, d = new Date()) {
+  const dd = String(d.getDate()).padStart(2, "0"), mm = String(d.getMonth() + 1).padStart(2, "0"), M = MON[d.getMonth()], y = d.getFullYear();
+  return ({"dd MMM yyyy": `${dd} ${M} ${y}`, "dd-MMM-yy": `${dd}-${M}-${String(y).slice(2)}`, "dd/MM/yyyy": `${dd}/${mm}/${y}`, "dd-MM-yyyy": `${dd}-${mm}-${y}`, "yyyy-MM-dd": `${y}-${mm}-${dd}`, "MMM dd, yyyy": `${M} ${dd}, ${y}`})[f] || `${dd}-${M}-${y}`;
+}
+function remarkStamp(sh) { const f = rmkFmt(sh); return `${fmtStampDate(f.date)}${f.tag ? `(${f.tag})` : ""}:`; }
+function addRemark(sh, old, txt) { const f = rmkFmt(sh), line = `${remarkStamp(sh)} ${txt.trim()}`; old = (old || "").trim(); return !old ? line : f.pos === "bottom" ? `${old}\n${line}` : `${line}\n${old}`; }
+const isRemark = (sh, c) => !!(sh && c && sh.remarkCol === c.id);
+async function aiRewrite(text, mode) {
+  const ask = mode === "improve"
+    ? "Improve this comment for a professional bank-project tracker: clear, concise, correct grammar and spelling, keep every fact, name, date and number. Do not add new facts."
+    : "Rephrase this tracker comment in different, clear words. Keep the same meaning, facts, names, dates and roughly the same length.";
+  return (await gemini(`${ask} Return only the rewritten comment, without a date prefix or quotes.\n\nComment:\n${text}`, {system: "You rewrite short status comments for a project tracker.", temp: 0.5})).trim().replace(/^["“]|["”]$/g, "");
+}
+async function aiSummary(text) {
+  return (await gemini(`Summarise the CURRENT status of this tracker entry in at most 2 short sentences (max 220 characters). Start from the latest dated update, keep names, dates and who it's pending with.\n\n${String(text).slice(0, 8000)}`, {system: aiSystem()})).trim();
+}
+function openRemarkSettings(colId) {
+  const sid = S.sheetId, sh = S.sheets[sid], cols = (sh.columns || []).filter(c => c.type === "long" || c.type === "text");
+  let col = colId || sh.remarkCol || (cols.find(c => /remark|update|comment|response/i.test(c.label)) || cols[0])?.id;
+  const f = rmkFmt(sh);
+  openDialog({
+    eyebrow: sh.name, title: "Remark column", saveLabel: "Save",
+    body: () => `<p class="hint" style="margin:0">The remark column gets dated updates, ${AI_ON ? "an AI summary icon in every cell, and AI rephrase / improve for new comments" : "and a quick “Add update” box"}. One remark column per sheet.</p>
+      <div class="field"><label for="rk_col">Remark column</label><select class="inp" id="rk_col"><option value="">None</option>${cols.map(c => `<option value="${esc(c.id)}" ${c.id === col ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+      <div class="field"><span class="lbl">Date format for new updates</span><div class="choices" id="rk_date">${Object.entries(RMK_DATES).map(([k, ex]) => `<button type="button" class="choice" data-v="${k}" aria-pressed="${f.date === k}"><b>${ex}</b><span>${k}</span></button>`).join("")}</div></div>
+      <div class="row2" style="flex:none;gap:12px">
+        <div class="field" style="flex:1"><label for="rk_tag">Name after the date <span class="typ">optional</span></label><input class="inp" id="rk_tag" value="${esc(f.tag)}" placeholder="e.g. Fable, BCP, your name"></div>
+        <div class="field" style="flex:1"><label for="rk_pos">New updates go</label><select class="inp" id="rk_pos"><option value="top" ${f.pos !== "bottom" ? "selected" : ""}>On top (newest first)</option><option value="bottom" ${f.pos === "bottom" ? "selected" : ""}>At the bottom</option></select></div></div>
+      <div class="banner" id="rk_prev"></div>`,
+    mount: root => {
+      const g = root.querySelector("#rk_date"); g.dataset.v = f.date; pressGroup(g, ".choice", "v");
+      const prev = () => { const tmp = {remarkFmt: {date: g.dataset.v, tag: root.querySelector("#rk_tag").value.trim(), pos: root.querySelector("#rk_pos").value}}; root.querySelector("#rk_prev").textContent = "Preview: " + remarkStamp(tmp) + " Shared revised FSD with the bank."; };
+      root.addEventListener("input", prev); root.addEventListener("change", prev); g.addEventListener("pick", prev); prev();
+    },
+    onSave: root => {
+      const cur = S.sheets[sid], sn = snap("sheets", [sid]);
+      store.put("sheets", sid, {...cur, remarkCol: root.querySelector("#rk_col").value || null, remarkFmt: {date: root.querySelector("#rk_date").dataset.v, tag: root.querySelector("#rk_tag").value.trim(), pos: root.querySelector("#rk_pos").value}});
+      render(); pushUndo("Remark column settings saved", sn);
+    }
+  });
+}
+
 /* ---------- Backup & restore (JSON) ---------- */
 function openBackup() {
   const counts = () => `${Object.keys(S.trackers).length} trackers · ${Object.keys(S.sheets).length} sheets · ${Object.keys(S.rows).length} entries`;
@@ -1516,8 +1573,16 @@ function openCellPop(td) {
       <div class="row2"><input class="inp" id="cpNew" placeholder="Other value… press Enter"></div>${v ? `<div class="acts"><button type="button" class="stamp" data-cp="clear" style="color:var(--bad)">Clear value</button></div>` : ""}`;
   } else if (c.type === "date") {
     m.innerHTML = title + `<input class="inp" type="date" id="cpIn" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "")}">` + acts(`<button type="button" class="stamp" data-cp="today">Today</button>${v ? `<button type="button" class="stamp" data-cp="clear" style="color:var(--bad)">Clear</button>` : ""}`);
+  } else if (isRemark(sh, c)) {
+    m.className = "cellpop wide rmkpop";
+    m.innerHTML = title + `<div class="rmkadd"><label class="hint" for="rmNew">New update · will be added as <b>${esc(remarkStamp(sh))}</b></label>
+        <textarea class="inp" id="rmNew" rows="3" placeholder="Type the new comment…"></textarea>
+        <div class="acts">${AI_ON ? `<button type="button" class="stamp" data-cp="rephrase">${ICON.spark} Rephrase</button><button type="button" class="stamp" data-cp="improve">${ICON.spark} Improve</button><button type="button" class="stamp" data-cp="revert" hidden>↶ Undo AI</button>` : ""}<span class="sp"></span><button type="button" class="btn ghost" data-cp="cancel">Cancel</button><button type="button" class="btn primary" data-cp="rmadd">Add update</button></div></div>
+      <div id="rmOut"></div>
+      <div class="acts" style="border-top:1px solid var(--line);padding-top:8px">${AI_ON && v ? `<button type="button" class="stamp" data-cp="rmsum">${ICON.spark} Summarise remarks</button>` : ""}${v ? `<button type="button" class="stamp" data-cp="rmfull">Edit full text</button>` : ""}</div>
+      <div id="rmFull" hidden><textarea class="inp" id="cpIn">${esc(v)}</textarea><div class="acts"><span class="sp"></span><button type="button" class="btn primary" data-cp="save">Save full text</button></div></div>`;
   } else if (c.type === "long") {
-    m.innerHTML = title + `<textarea class="inp" id="cpIn" placeholder="Write the update…">${esc(v)}</textarea>` + acts(`<button type="button" class="stamp" data-cp="stamp">+ Today's update</button><span class="hint">Ctrl + Enter to save</span>`);
+    m.innerHTML = title + `<textarea class="inp" id="cpIn" placeholder="Write the update…">${esc(v)}</textarea>` + acts(`<span class="hint">Ctrl + Enter to save</span>`);
   } else {
     m.innerHTML = title + `<input class="inp" id="cpIn" ${c.type === "number" ? 'type="number" style="font-family:var(--f-mono)"' : ""} value="${esc(v)}">` + acts(`<span class="hint">Enter to save</span>`);
   }
@@ -1530,7 +1595,7 @@ function openCellPop(td) {
     m.style.top = top + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px";
   };
   CP.place();
-  const inp = m.querySelector("#cpIn") || (isTouch() ? null : m.querySelector("#cpNew"));
+  const inp = m.querySelector("#rmNew") || (m.querySelector("#rmFull") ? null : m.querySelector("#cpIn")) || (isTouch() ? null : m.querySelector("#cpNew"));
   inp?.focus({preventScroll: true});
   if (inp && inp.tagName === "TEXTAREA") { inp.setSelectionRange(0, 0); }
   else if (inp && inp.type !== "date") inp.select?.();
@@ -1539,6 +1604,7 @@ function openCellPop(td) {
     if (e.key === "Escape") { e.stopPropagation(); closeCellPop(); return; }
     if (e.target.id === "cpNew" && e.key === "Enter") { e.preventDefault(); if (e.target.value.trim()) saveCell(rowId, colId, e.target.value); return; }
     if (e.target.id === "cpIn" && e.key === "Enter" && (e.target.tagName !== "TEXTAREA" || e.ctrlKey || e.metaKey)) { e.preventDefault(); saveCell(rowId, colId, e.target.value); }
+    if (e.target.id === "rmNew" && e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); m.querySelector('[data-cp="rmadd"]').click(); }
   });
   m.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
@@ -1548,10 +1614,42 @@ function openCellPop(td) {
     else if (a === "save") saveCell(rowId, colId, f ? f.value : "");
     else if (a === "clear") saveCell(rowId, colId, "");
     else if (a === "today") saveCell(rowId, colId, todayISO());
-    else if (a === "stamp") { const pre = `${stampText()}(Fable): `; f.value = pre + (f.value ? "\n" + f.value : ""); f.focus(); f.setSelectionRange(pre.length, pre.length); }
+    else if (a === "rmadd") { const t = m.querySelector("#rmNew").value.trim(); if (!t) { m.querySelector("#rmNew").focus(); toast("Type the update first"); return; } saveCell(rowId, colId, addRemark(sh, (r.cells || {})[colId], t)); }
+    else if (a === "rmfull") { m.querySelector("#rmFull").hidden = false; b.hidden = true; m.querySelector("#cpIn").focus(); CP.place?.(); }
+    else if (a === "rephrase" || a === "improve") {
+      const ta = m.querySelector("#rmNew"), t = ta.value.trim(); if (!t) { ta.focus(); toast("Type a comment first, then rephrase or improve it"); return; }
+      if (!AI.key) { closeCellPop(); openAI("settings"); return; }
+      const old = b.textContent; b.disabled = true; b.textContent = "Working…";
+      aiRewrite(t, a).then(x => { m.dataset.prev = t; ta.value = x; m.querySelector('[data-cp="revert"]').hidden = false; }).catch(err => toast(err.message)).finally(() => { b.disabled = false; b.innerHTML = `${ICON.spark} ${a === "improve" ? "Improve" : "Rephrase"}`; });
+    }
+    else if (a === "revert") { m.querySelector("#rmNew").value = m.dataset.prev || ""; b.hidden = true; }
+    else if (a === "rmsum") { remarkSummaryInto(m.querySelector("#rmOut"), (r.cells || {})[colId], m.querySelector("#rmNew")); }
   });
 }
 document.addEventListener("mousedown", e => { if (CP && !e.target.closest("#cellPop") && !e.target.closest("td.editing")) closeCellPop(); });
+async function remarkSummaryInto(box, text, useInto) {
+  if (!AI.key) { closeCellPop(); openAI("settings"); return; }
+  box.className = "aisum"; box.innerHTML = `<span class="aithink">Summarising…</span>`; CP?.place?.();
+  try { const s = await aiSummary(text); box.innerHTML = `<div class="aitxt">${esc(s)}</div><div class="row2" style="flex:none"><button type="button" class="stamp" data-sumcopy>Copy</button>${useInto ? `<button type="button" class="stamp" data-sumuse>Use as new update</button>` : ""}</div>`;
+    box.querySelector("[data-sumcopy]").onclick = () => navigator.clipboard.writeText(s).then(() => toast("Summary copied"), () => {});
+    box.querySelector("[data-sumuse]")?.addEventListener("click", () => { useInto.value = "Summary: " + s; useInto.focus(); });
+  } catch (e) { box.innerHTML = `<span style="color:var(--bad)">${esc(e.message)}</span>`; }
+  CP?.place?.();
+}
+/* summary icon inside remark cells */
+function openRemarkSummaryPop(btn) {
+  const td = btn.closest("td"), rowId = td.closest("tr").dataset.row, colId = td.dataset.cell, r = S.rows[rowId], sh = S.sheets[r?.sheetId], c = (sh?.columns || []).find(x => x.id === colId);
+  closeCellPop(); closeColMenu(); CP = {rowId, colId}; td.classList.add("editing");
+  const m = document.createElement("div"); m.className = "cellpop wide"; m.id = "cellPop";
+  m.innerHTML = `<div class="ttl"><span>${ICON.spark} Summary · ${esc(c?.label || "")}</span><button type="button" class="icon" data-x aria-label="Close">✕</button></div><div id="rsOut"></div><div class="acts"><span class="sp"></span><button type="button" class="btn" data-edit>Add an update…</button></div>`;
+  document.body.appendChild(m);
+  CP.place = () => { if (sheetMode()) return; const rc = td.getBoundingClientRect(); if (!td.isConnected || rc.bottom < 0 || rc.top > innerHeight) { closeCellPop(); return; } let top = rc.bottom + 4; if (top + m.offsetHeight > innerHeight - 8) top = Math.max(8, rc.top - m.offsetHeight - 4); m.style.top = top + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px"; };
+  CP.place();
+  m.querySelector("[data-x]").onclick = closeCellPop;
+  m.querySelector("[data-edit]").onclick = () => openCellPop(td);
+  m.addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); closeCellPop(); } });
+  remarkSummaryInto(m.querySelector("#rsOut"), (r.cells || {})[colId], null);
+}
 const sheetMode = () => matchMedia("(max-width:760px)").matches;
 const isTouch = () => matchMedia("(hover:none)").matches;
 window.addEventListener("resize", () => { if (CP && !sheetMode()) CP.place?.(); });
@@ -1578,6 +1676,7 @@ function openColMenu(colId, anchor) {
       <button type="button" class="bbtn" data-cm="bold" aria-pressed="${!!sheetVP(S.sheetId).colfmt[c.id]?.bold}" title="Bold">B</button>
       <button type="button" class="bbtn" data-cm="wrap" aria-pressed="${sheetVP(S.sheetId).colfmt[c.id]?.wrap === "on"}" title="Wrap text">↵</button></div>
     <div class="cmfmt tints" data-l="Highlight">${Object.keys(TINTS).map(t => `<button type="button" class="tint" data-cm="tint" data-v="${t}" aria-pressed="${(sheetVP(S.sheetId).colfmt[c.id]?.color || "none") === t}" title="Highlight ${t}" style="--d:${TINT_DOT[t]}"></button>`).join("")}</div>
+    ${c.type === "long" || c.type === "text" ? `<button type="button" data-cm="remark">${S.sheets[S.sheetId].remarkCol === c.id ? "✎ Remark column settings…" : "✎ Set as remark column"}</button>` : ""}
     <button type="button" data-cm="hide">⊘ Hide column</button><button type="button" data-cm="width">↔ Reset width</button>
     <hr><button type="button" class="red" data-cm="delete">${ICON.trash} Delete column</button>`;
   document.body.appendChild(m);
@@ -1600,6 +1699,7 @@ function openColMenu(colId, anchor) {
       case "bold": { const cf = colFmt(S.sheetId, colId); cf.bold ? delete cf.bold : cf.bold = true; saveVP(); closeColMenu(); render(); break; }
       case "wrap": { const cf = colFmt(S.sheetId, colId); cf.wrap === "on" ? delete cf.wrap : cf.wrap = "on"; saveVP(); closeColMenu(); render(); break; }
       case "tint": { const cf = colFmt(S.sheetId, colId); b.dataset.v === "none" ? delete cf.color : cf.color = b.dataset.v; saveVP(); closeColMenu(); render(); break; }
+      case "remark": closeColMenu(); openRemarkSettings(colId); break;
       case "hide": { const v = sheetVP(S.sheetId); if (!v.hidden.includes(colId)) v.hidden.push(colId); saveVP(); closeColMenu(); render(); toast(`“${c.label}” hidden. Use Format to show it again`); break; }
       case "width": { delete sheetVP(S.sheetId).widths[colId]; saveVP(); closeColMenu(); render(); break; }
       case "left": case "right": { const k = b.dataset.cm === "left" ? j - 1 : j + 1; [cs[j], cs[k]] = [cs[k], cs[j]]; save(cs, "Column moved"); break; }
@@ -1639,7 +1739,9 @@ function openDrawer(sheetId, rowId, preset) {
       const opts = [...new Set([...(c.options || []), ...(v ? [v] : [])])];
       ctl = `<div class="opts" role="group" aria-labelledby="l_${esc(c.id)}" data-sel="${esc(c.id)}">${opts.map(o => `<button type="button" class="opt ${v === o ? "t-" + tone(o) : ""}" aria-pressed="${v === o}" data-v="${esc(o)}" title="${esc(o)}">${esc(o)}</button>`).join("")}<button type="button" class="opt addopt" data-addopt="${esc(c.id)}">+ Other…</button></div><input class="inp" id="${id}" data-newopt="${esc(c.id)}" placeholder="Type a new option and press Enter" hidden>`;
     } else ctl = `<input class="inp" id="${id}" data-col="${esc(c.id)}" value="${esc(v)}">`;
-    const stamp = c.type === "long" ? `<span>${AI_ON ? `<button type="button" class="stamp" data-aisum="${esc(c.id)}" title="AI summary of this field">${ICON.spark} Summarise</button>` : ""}<button type="button" class="stamp" data-stamp="${esc(c.id)}" title="Add a dated line at the top">+ Today's update</button></span>` : "";
+    const rmk = isRemark(sh, c);
+    const stamp = rmk && AI_ON ? `<span><button type="button" class="stamp" data-aisum="${esc(c.id)}" title="AI summary of this field">${ICON.spark} Summarise</button></span>` : "";
+    if (rmk) ctl = `<div class="rmkadd"><textarea class="inp" id="dr_rm_${esc(c.id)}" rows="2" placeholder="New update · added as ${esc(remarkStamp(sh))}"></textarea><div class="acts">${AI_ON ? `<button type="button" class="stamp" data-airw="rephrase" data-col="${esc(c.id)}">${ICON.spark} Rephrase</button><button type="button" class="stamp" data-airw="improve" data-col="${esc(c.id)}">${ICON.spark} Improve</button>` : ""}<span class="sp" style="flex:1"></span><button type="button" class="btn" data-rmadd="${esc(c.id)}">Add update</button></div></div>` + ctl;
     return `<div class="field ${v ? "filled" : ""}" data-field="${esc(c.id)}"><div class="lbl"><label id="l_${esc(c.id)}" for="${id}">${esc(c.label)} <span class="typ">${esc(TYPES[c.type] || "")}</span></label>${stamp}</div>${ctl}</div>`;
   }).join("") + (rowId && S.rows[rowId]?.updatedAt ? `<div class="hint">Last saved ${esc(ago(S.rows[rowId].updatedAt))}${S.rows[rowId].updatedBy ? ` by ${esc(S.rows[rowId].updatedBy)}` : ""}</div>` : "");
   f.querySelectorAll("textarea").forEach(autogrow);
@@ -1699,10 +1801,12 @@ $("#drForm").addEventListener("click", e => {
     updateProgress();
   } else if (b.dataset.addopt) { const inp = $(`#f_${CSS.escape(b.dataset.addopt)}`); inp.hidden = false; inp.focus(); }
   else if (b.dataset.aisum) summariseField(b.dataset.aisum, b);
+  else if (b.dataset.rmadd) { const cid = b.dataset.rmadd, ta = $(`#dr_rm_${CSS.escape(cid)}`), t = $(`#f_${CSS.escape(cid)}`); if (!ta.value.trim()) { ta.focus(); return; } t.value = addRemark(S.sheets[D.sheetId], t.value, ta.value); D.cells[cid] = t.value; ta.value = ""; autogrow(t); updateProgress(); toast("Update added. Save the entry to keep it"); }
+  else if (b.dataset.airw) { const cid = b.dataset.col, ta = $(`#dr_rm_${CSS.escape(cid)}`); if (!ta.value.trim()) { ta.focus(); toast("Type a comment first"); return; } if (!AI.key) { openAI("settings"); return; } const lbl = b.innerHTML; b.disabled = true; b.textContent = "Working…"; aiRewrite(ta.value, b.dataset.airw).then(x => { ta.value = x; }).catch(err => toast(err.message)).finally(() => { b.disabled = false; b.innerHTML = lbl; }); }
   else if (b.dataset.aiuse) {
     const col = b.dataset.aiuse, t = $(`#f_${CSS.escape(col)}`), txt = b.closest(".aisum").querySelector(".aitxt").textContent, pre = `${stampText()}(Summary): `;
     if (b.dataset.mode === "copy") { try { navigator.clipboard.writeText(txt); toast("Summary copied"); } catch (e) {} return; }
-    t.value = pre + txt + (t.value ? "\n" + t.value : ""); D.cells[col] = t.value; autogrow(t); updateProgress(); b.closest(".aisum").remove(); toast("Summary added at the top. Save to keep it");
+    t.value = addRemark(S.sheets[D.sheetId], t.value, "Summary: " + txt); D.cells[col] = t.value; autogrow(t); updateProgress(); b.closest(".aisum").remove(); toast("Summary added at the top. Save to keep it");
   }
   else if (b.dataset.stamp) {
     const t = $(`#f_${CSS.escape(b.dataset.stamp)}`), pre = `${stampText()}(Fable): `;
@@ -2256,12 +2360,12 @@ function sheetsContext(ids, maxChars = 350000) {
   const out = []; let used = 0;
   for (const id of ids) {
     const sh = {id, ...S.sheets[id]}, cols = sh.columns || [], rows = rowsOf(id);
-    const head = `### Sheet: ${sh.name}${sh.note ? ` (note: ${sh.note})` : ""} — ${rows.length} rows\nrow_id | ${cols.map(c => c.label + (c.type === "calc" ? " (auto)" : "")).join(" | ")} | flags`;
+    const head = `### Sheet: ${sh.name}${sh.note ? ` (note: ${sh.note})` : ""} — ${rows.length} rows${sh.remarkCol ? ` (remark column: ${(cols.find(c => c.id === sh.remarkCol) || {}).label})` : ""}\nrow_id | ${cols.map(c => c.label + (c.type === "calc" ? " (auto)" : "")).join(" | ")} | flags | last_updated`;
     const lines = [head];
     for (const r of rows) {
       const st = rowState(sh, r), flags = [st.imp ? "IMPORTANT" : "", st.breach ? `ETA CROSSED +${st.late}d` : "", isDoneRow(sh, r) ? "DONE" : ""].filter(Boolean).join(",");
       const vals = cols.map(c => { let v = c.type === "calc" ? calcCell(sh, c, r).text : ((r.cells || {})[c.id] || ""); v = String(v).replace(/\s*\n\s*/g, " ⏎ "); return v.length > 700 ? v.slice(0, 700) + "…" : v; });
-      const line = `${r.id} | ${vals.join(" | ")} | ${flags}`;
+      const line = `${r.id} | ${vals.join(" | ")} | ${flags} | ${(r.updatedAt || "").slice(0, 10)}`;
       if (used + line.length > maxChars) { lines.push("…(more rows omitted for length)"); break; }
       used += line.length; lines.push(line);
     }
@@ -2289,8 +2393,8 @@ function wirePicker(root, id) {
 }
 let AIP = {tab: "ask", ask: [], q: ""};
 function openAI(tab) {
-  AIP.tab = tab || (AI.key ? AIP.tab : "settings");
-  const tabs = [["ask", "Ask the tracker"], ["email", "Status email"], ["sum", "Summaries"], ["settings", "Settings"]];
+  AIP.tab = tab || (AI.key ? (AIP.tab === "sum" ? "ask" : AIP.tab) : "settings");
+  const tabs = [["ask", "Ask the tracker"], ["email", "Status email"], ["settings", "Settings"]];
   openDialog({
     eyebrow: "AI assistant · Gemini", title: "Ask, draft and summarise", saveLabel: "Close",
     body: () => `<div class="seg aitabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" data-aitab="${k}" aria-pressed="${AIP.tab === k}">${l}</button>`).join("")}</div><div id="aipane"></div>`,
@@ -2331,19 +2435,25 @@ function paneEmail(pane) {
   const preset = AIP.mailSheets || sheetList().map(s => s.id);
   pane.innerHTML = `<div class="field"><span class="lbl">Include these sheets</span>${sheetPicker("ai_m_sh", preset)}</div>
     <div class="row2" style="flex:none;gap:12px">
-      <div class="field" style="flex:1"><label for="ai_aud">Audience</label><select class="inp" id="ai_aud"><option value="bank">Bank stakeholders</option><option value="internal">Internal team / management</option></select></div>
-      <div class="field" style="flex:1"><label for="ai_per">Period</label><select class="inp" id="ai_per"><option value="this week">This week</option><option value="the last 2 weeks">Last 2 weeks</option><option value="this month">This month</option></select></div>
+      <div class="field" style="flex:2"><span class="lbl">Period</span><div class="row2" style="flex:none;gap:8px;align-items:center"><input class="inp" type="date" id="ai_from" style="flex:1"><span class="hint">to</span><input class="inp" type="date" id="ai_to" style="flex:1"></div>
+        <div class="chips">${[["week", "This week"], ["7", "Last 7 days"], ["14", "Last 14 days"], ["month", "This month"], ["30", "Last 30 days"]].map(([k, l]) => `<button type="button" class="chip t-neu" data-per="${k}">${l}</button>`).join("")}</div></div>
       <div class="field" style="flex:1"><label for="ai_tone">Style</label><select class="inp" id="ai_tone"><option value="formal and concise">Formal, concise</option><option value="brief bullet points only">Very brief bullets</option><option value="detailed with context">Detailed</option></select></div></div>
     <div class="field"><label for="ai_extra">Anything to add? <span class="typ">optional</span></label><input class="inp" id="ai_extra" placeholder="e.g. mention the go-live target of 15 Dec, sign off as Fable team"></div>
     <button class="btn primary" type="button" id="ai_mgo" style="align-self:flex-start">${ICON.spark} Draft email</button>
     <div id="ai_mout"></div>`;
   const sel = wirePicker(pane, "ai_m_sh"), go = pane.querySelector("#ai_mgo"), out = pane.querySelector("#ai_mout");
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const setPer = k => { const t = today0(), f = new Date(t); if (k === "week") f.setDate(t.getDate() - ((t.getDay() + 6) % 7)); else if (k === "month") f.setDate(1); else f.setDate(t.getDate() - (+k - 1)); pane.querySelector("#ai_from").value = iso(f); pane.querySelector("#ai_to").value = iso(t); pane.querySelectorAll("[data-per]").forEach(b => b.setAttribute("aria-pressed", b.dataset.per === k)); AIP.per = k; };
+  pane.querySelectorAll("[data-per]").forEach(b => b.onclick = () => setPer(b.dataset.per));
+  if (AIP.from && AIP.to) { pane.querySelector("#ai_from").value = AIP.from; pane.querySelector("#ai_to").value = AIP.to; } else setPer("week");
   go.onclick = async () => {
     const ids = sel(); AIP.mailSheets = ids; if (!ids.length) { toast("Pick at least one sheet"); return; }
     const trk = [...new Set(ids.map(id => trackerList().find(t => t.id === tid(S.sheets[id]))?.name))].filter(Boolean).join(" & ");
+    const from = pane.querySelector("#ai_from").value, to = pane.querySelector("#ai_to").value; if (!from || !to || from > to) { toast("Pick a valid period: from date on or before the to date"); return; } AIP.from = from; AIP.to = to;
     go.disabled = true; out.innerHTML = `<div class="aithink">Writing the update…</div>`;
     try {
-      const j = await gemini(`Write a weekly status email for the ${trk || "bank"} project for ${pane.querySelector("#ai_aud").selectedOptions[0].text}, covering ${pane.querySelector("#ai_per").value}. Style: ${pane.querySelector("#ai_tone").value}. ${pane.querySelector("#ai_extra").value}
+      const j = await gemini(`Write a status email for the ${trk || "bank"} project covering the period ${fmtDate(from)} to ${fmtDate(to)} (${from} to ${to}). Style: ${pane.querySelector("#ai_tone").value}. ${pane.querySelector("#ai_extra").value}
+Focus on what happened in that period: remark lines dated within it and rows whose last_updated falls in it. Still list items that are open, blocked or past their ETA as of the end date.
 Structure the body with short sections: Summary; Completed; In progress; Pending with the bank / blockers; ETA crossed (with days late); Next steps. Use plain text with "- " bullets, no markdown symbols like ** or #. Do not invent facts. Do not include row ids.
 Return JSON: {"subject": string, "body": string}.
 
@@ -2703,11 +2813,12 @@ async function exportXlsx(ids, mode) {
 /* ---------- Global events ---------- */
 document.addEventListener("click", e => {
   if (!e.target.closest(".trk")) { $("#trkPop").hidden = true; $("#trkBtn").setAttribute("aria-expanded", "false"); }
-  const b = e.target.closest("[data-sheet],[data-home],[data-open],[data-act],[data-layout],[data-filter],[data-sort],[data-trk],[data-fedit],[data-fdel],[data-imp],[data-colmenu],td[data-cell]");
+  const b = e.target.closest("[data-sheet],[data-home],[data-open],[data-act],[data-layout],[data-filter],[data-sort],[data-trk],[data-fedit],[data-fdel],[data-imp],[data-colmenu],[data-rmksum],td[data-cell]");
   if (!b || b.closest("#drawer") || b.closest("#modal") || b.closest("#dlg")) { if (!e.target.closest(".menu")) $("#sheetMenu")?.setAttribute("hidden", ""); return; }
   if (!b.closest(".menu")) $("#sheetMenu")?.setAttribute("hidden", "");
   if (b.closest("#trkPop")) $("#trkPop").hidden = true;
-  if (b.dataset.cell) { if (!(CP && b.classList.contains("editing"))) openCellPop(b); }
+  if (b.dataset.rmksum !== undefined) { openRemarkSummaryPop(b); }
+  else if (b.dataset.cell) { if (!(CP && b.classList.contains("editing"))) openCellPop(b); }
   else if (b.dataset.imp) { e.stopPropagation(); toggleImp(b.dataset.imp); }
   else if (b.dataset.colmenu) { if (CM && CM.colId === b.dataset.colmenu) closeColMenu(); else openColMenu(b.dataset.colmenu, b); }
   else if (b.dataset.trk) setTracker(b.dataset.trk);
@@ -2751,6 +2862,7 @@ document.addEventListener("click", e => {
     case "splitsec": splitExistingSheet(); break;
     case "gsave": saveGrid(); break;
     case "ai": openAI(); break;
+    case "remarkset": openRemarkSettings(); break;
     case "fmt": openFormat(); break;
     case "addrow": addRowInline(); break;
     case "addcolq": openQuickCol(b); break;
