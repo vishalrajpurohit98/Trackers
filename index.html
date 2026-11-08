@@ -502,6 +502,29 @@ tr.addrow button.hidnote{color:var(--muted);font-weight:600;left:auto}
 .colmenu .cmfmt .bbtn{width:32px;height:30px;padding:0;justify-content:center;border:1.5px solid var(--line);font-weight:800;border-radius:7px}
 .colmenu .cmfmt .bbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .colmenu .cmfmt::before{content:attr(data-l);font-size:11px;color:var(--muted);width:58px;flex:none}
+/* AI */
+.mbox.wide{width:min(860px,100%)}
+.aibtn{color:var(--accent)}
+.aitabs{align-self:flex-start;flex-wrap:wrap}
+.aipick{max-height:180px;overflow:auto}
+.aiout{display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55}
+.aiout:empty{display:none}
+.aiout p{margin:0} .aiout ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.aiout,.aisum{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:12px 14px}
+.aimeta{font-size:11.5px;color:var(--muted);margin-top:6px}
+.aithink{color:var(--muted);font-size:13.5px;animation:pulse 1.2s infinite}
+.airow{all:unset;cursor:pointer;display:inline-flex;align-items:baseline;gap:5px;padding:1px 8px;margin:1px 2px;border-radius:99px;background:var(--accent-soft);color:var(--ink);font-weight:600;font-size:13px}
+.airow small{color:var(--muted);font-weight:500;font-size:11px}
+.airow:hover,.airow:focus-visible{outline:2px solid var(--accent)}
+.aisum{margin-top:6px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.sumlist{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.sumrow{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.sumrow>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sumrow input{margin-top:3px;accent-color:var(--accent)}
+.sumrow .aitxt{outline:none;border-radius:6px;padding:2px 4px;margin-left:-4px}
+.sumrow .aitxt:focus{background:var(--accent-soft)}
+.aif label svg,.stamp svg{width:13px;height:13px;vertical-align:-2px}
+.field .lbl>span{display:flex;gap:2px}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -618,6 +641,8 @@ window.FIREBASE_CONFIG = {
 };
 /* Folder inside the database where the tracker data lives. */
 window.DATA_ROOT = "tracker";
+/* AI assistant (Google Gemini). Each person adds their own API key in AI → Settings; it is stored only in their browser. */
+window.AI_FEATURES = true;
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -731,6 +756,7 @@ const ICON = {
   expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
   shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
   format:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2Zm7 12l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14ZM5 15l.7 1.8L7.5 17.5l-1.8.7L5 20l-.7-1.8-1.8-.7 1.8-.7L5 15Z"/></svg>',
   palette:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.1-4-7.5-9-7.5Z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg>',
   dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
 };
@@ -925,6 +951,7 @@ function render() {
 }
 function topbar(crumb) {
   return `<div class="topbar"><button class="btn ghost sidetog" type="button" data-act="toggleside" aria-pressed="${!S.noside}" title="Menu (press [ )" aria-label="Menu">${ICON.side}</button><div class="crumb">${crumb}</div>
+    ${AI_ON ? `<button class="btn ghost aibtn" type="button" data-act="ai" title="Ask AI, status email, summaries" aria-label="AI assistant">${ICON.spark}<span class="bl">AI</span></button>` : ""}
     <button class="btn ghost" type="button" data-act="theme" title="Theme &amp; appearance" aria-label="Theme">${ICON.palette}<span class="bl">Theme</span></button>
     <button class="btn ghost" type="button" data-act="import" title="Import Excel" aria-label="Import Excel">${ICON.ul}<span class="bl">Import Excel</span></button>
     <button class="btn ghost" type="button" data-act="fullscreen" title="${S.full ? "Exit full screen (F)" : "Full screen (F)"}">${S.full ? ICON.shrink : ICON.expand}<span class="bl">${S.full ? "Exit full screen" : "Full screen"}</span></button>
@@ -1153,9 +1180,13 @@ function openFilter(idx, presetCol) {
   openDialog({
     eyebrow: sh.name, title: idx != null ? "Edit filter" : "Add a filter", saveLabel: "Apply filter",
     onDelete: idx != null ? () => { list.splice(idx, 1); S.filters[sh.id] = list; saveFilters(); render(); } : null, deleteLabel: "Remove filter", confirmLabel: "Click again to remove",
-    body: () => `<div class="field"><label for="f_col">Column</label><select class="inp" id="f_col">${cols.map(c => `<option value="${esc(c.id)}" ${c.id === cur.col ? "selected" : ""}>${esc(c.label)} · ${TYPES[c.type]}</option>`).join("")}</select></div><div id="f_val">${valueUI()}</div>`,
+    body: () => `${AI_ON && idx == null ? `<div class="field aif"><label for="f_ai">${ICON.spark} Describe what you want to see</label><div class="row2" style="flex:none"><input class="inp" id="f_ai" placeholder="e.g. SSL renewals expiring in the next 3 months" style="flex:1"><button class="btn primary" type="button" id="f_aigo" style="flex:none">Apply</button></div><span class="hint" id="f_aimsg">AI turns your words into filters. Or set one filter by hand below.</span></div>` : ""}<div class="field"><label for="f_col">Column</label><select class="inp" id="f_col">${cols.map(c => `<option value="${esc(c.id)}" ${c.id === cur.col ? "selected" : ""}>${esc(c.label)} · ${TYPES[c.type]}</option>`).join("")}</select></div><div id="f_val">${valueUI()}</div>`,
     mount: root => {
       const redraw = () => { root.querySelector("#f_val").innerHTML = valueUI(); };
+      const aiGo = async () => { const q = root.querySelector("#f_ai").value.trim(); if (!q) return; const msg = root.querySelector("#f_aimsg"); msg.textContent = "Thinking…";
+        try { const n = await aiFilter(q); closeDialog(true); toast(`${n} filter${n === 1 ? "" : "s"} applied`); } catch (e) { msg.textContent = e.message; msg.style.color = "var(--bad)"; } };
+      root.querySelector("#f_aigo")?.addEventListener("click", aiGo);
+      root.querySelector("#f_ai")?.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); aiGo(); } });
       root.addEventListener("change", e => {
         if (e.target.id === "f_col") { cur.col = e.target.value; cur.op = null; cur.val = null; redraw(); }
         else if (e.target.id === "f_op") { cur.op = e.target.value; redraw(); }
@@ -1608,7 +1639,7 @@ function openDrawer(sheetId, rowId, preset) {
       const opts = [...new Set([...(c.options || []), ...(v ? [v] : [])])];
       ctl = `<div class="opts" role="group" aria-labelledby="l_${esc(c.id)}" data-sel="${esc(c.id)}">${opts.map(o => `<button type="button" class="opt ${v === o ? "t-" + tone(o) : ""}" aria-pressed="${v === o}" data-v="${esc(o)}" title="${esc(o)}">${esc(o)}</button>`).join("")}<button type="button" class="opt addopt" data-addopt="${esc(c.id)}">+ Other…</button></div><input class="inp" id="${id}" data-newopt="${esc(c.id)}" placeholder="Type a new option and press Enter" hidden>`;
     } else ctl = `<input class="inp" id="${id}" data-col="${esc(c.id)}" value="${esc(v)}">`;
-    const stamp = c.type === "long" ? `<button type="button" class="stamp" data-stamp="${esc(c.id)}" title="Add a dated line at the top">+ Today's update</button>` : "";
+    const stamp = c.type === "long" ? `<span>${AI_ON ? `<button type="button" class="stamp" data-aisum="${esc(c.id)}" title="AI summary of this field">${ICON.spark} Summarise</button>` : ""}<button type="button" class="stamp" data-stamp="${esc(c.id)}" title="Add a dated line at the top">+ Today's update</button></span>` : "";
     return `<div class="field ${v ? "filled" : ""}" data-field="${esc(c.id)}"><div class="lbl"><label id="l_${esc(c.id)}" for="${id}">${esc(c.label)} <span class="typ">${esc(TYPES[c.type] || "")}</span></label>${stamp}</div>${ctl}</div>`;
   }).join("") + (rowId && S.rows[rowId]?.updatedAt ? `<div class="hint">Last saved ${esc(ago(S.rows[rowId].updatedAt))}${S.rows[rowId].updatedBy ? ` by ${esc(S.rows[rowId].updatedBy)}` : ""}</div>` : "");
   f.querySelectorAll("textarea").forEach(autogrow);
@@ -1667,6 +1698,12 @@ $("#drForm").addEventListener("click", e => {
     grp.querySelectorAll(".opt[data-v]").forEach(o => { const on = o.dataset.v === D.cells[col]; o.setAttribute("aria-pressed", on); o.className = "opt" + (on ? " t-" + tone(o.dataset.v) : ""); });
     updateProgress();
   } else if (b.dataset.addopt) { const inp = $(`#f_${CSS.escape(b.dataset.addopt)}`); inp.hidden = false; inp.focus(); }
+  else if (b.dataset.aisum) summariseField(b.dataset.aisum, b);
+  else if (b.dataset.aiuse) {
+    const col = b.dataset.aiuse, t = $(`#f_${CSS.escape(col)}`), txt = b.closest(".aisum").querySelector(".aitxt").textContent, pre = `${stampText()}(Summary): `;
+    if (b.dataset.mode === "copy") { try { navigator.clipboard.writeText(txt); toast("Summary copied"); } catch (e) {} return; }
+    t.value = pre + txt + (t.value ? "\n" + t.value : ""); D.cells[col] = t.value; autogrow(t); updateProgress(); b.closest(".aisum").remove(); toast("Summary added at the top. Save to keep it");
+  }
   else if (b.dataset.stamp) {
     const t = $(`#f_${CSS.escape(b.dataset.stamp)}`), pre = `${stampText()}(Fable): `;
     t.value = pre + (t.value ? "\n" + t.value : ""); D.cells[b.dataset.stamp] = t.value; autogrow(t); t.focus(); t.setSelectionRange(pre.length, pre.length); updateProgress();
@@ -2178,6 +2215,232 @@ function openQuickCol(anchor) {
   m.querySelector("#qcMore").onclick = () => { closeColMenu(); openAddColumn(); };
 }
 
+/* ---------- AI (Google Gemini) ---------- */
+const AI_ON = !!window.AI_FEATURES;
+const AI = {key: "", model: "", models: [], auto: true};
+try { Object.assign(AI, JSON.parse(localStorage.getItem("ai-settings") || "{}")); } catch (e) {}
+const saveAI = () => { try { localStorage.setItem("ai-settings", JSON.stringify(AI)); } catch (e) {} };
+const GAPI = "https://generativelanguage.googleapis.com/v1beta";
+function pickBestModel(list) {
+  const ver = n => { const m = /gemini-(\d+(?:\.\d+)?)/.exec(n); return m ? parseFloat(m[1]) : 0; };
+  const stable = list.filter(m => m.free && !/preview|exp|latest/.test(m.id));
+  const flash = (stable.length ? stable : list.filter(m => m.free)).filter(m => /-flash$/.test(m.id) || /-flash-\d{3}$/.test(m.id));
+  const pool = flash.length ? flash : list.filter(m => m.free);
+  return (pool.sort((a, b) => ver(b.id) - ver(a.id))[0] || list[0] || {}).id || "";
+}
+async function aiLoadModels() {
+  if (!AI.key) throw new Error("Add your Gemini API key first.");
+  const r = await fetch(`${GAPI}/models?pageSize=200`, {headers: {"x-goog-api-key": AI.key}});
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message || `Google returned ${r.status}`);
+  AI.models = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent") && /gemini|gemma/.test(m.name) && !/image|tts|audio|live|embedding|vision|veo|imagen|robotics|computer-use/.test(m.name))
+    .map(m => { const id = m.name.replace(/^models\//, ""); return {id, label: m.displayName || id, free: /flash|gemma/.test(id), ctx: m.inputTokenLimit || 0}; })
+    .sort((a, b) => (b.free - a.free) || b.id.localeCompare(a.id, undefined, {numeric: true}));
+  if (AI.auto || !AI.models.some(m => m.id === AI.model)) AI.model = pickBestModel(AI.models);
+  AI.updatedAt = new Date().toISOString(); saveAI(); return AI.models;
+}
+async function gemini(prompt, {json = false, system = "", temp = 0.3} = {}) {
+  if (!AI.key) throw new Error("Add your Gemini API key in AI → Settings.");
+  if (!AI.model) await aiLoadModels();
+  const body = {contents: [{role: "user", parts: [{text: prompt}]}], generationConfig: {temperature: temp, ...(json ? {responseMimeType: "application/json"} : {})}};
+  if (system) body.systemInstruction = {parts: [{text: system}]};
+  const r = await fetch(`${GAPI}/models/${encodeURIComponent(AI.model)}:generateContent`, {method: "POST", headers: {"Content-Type": "application/json", "x-goog-api-key": AI.key}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(r.status === 429 ? "Free-tier limit reached for this model. Wait a minute or pick another model in AI → Settings." : (j.error?.message || `Google returned ${r.status}`));
+  const txt = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+  if (!txt) throw new Error(j.promptFeedback?.blockReason ? "Google blocked this request (" + j.promptFeedback.blockReason + ")." : "The model returned no answer. Try again.");
+  if (!json) return txt;
+  try { return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g, "")); } catch (e) { throw new Error("The model's answer wasn't in the expected format. Try again."); }
+}
+/* Serialise sheets as compact text for the model */
+function sheetsContext(ids, maxChars = 350000) {
+  const out = []; let used = 0;
+  for (const id of ids) {
+    const sh = {id, ...S.sheets[id]}, cols = sh.columns || [], rows = rowsOf(id);
+    const head = `### Sheet: ${sh.name}${sh.note ? ` (note: ${sh.note})` : ""} — ${rows.length} rows\nrow_id | ${cols.map(c => c.label + (c.type === "calc" ? " (auto)" : "")).join(" | ")} | flags`;
+    const lines = [head];
+    for (const r of rows) {
+      const st = rowState(sh, r), flags = [st.imp ? "IMPORTANT" : "", st.breach ? `ETA CROSSED +${st.late}d` : "", isDoneRow(sh, r) ? "DONE" : ""].filter(Boolean).join(",");
+      const vals = cols.map(c => { let v = c.type === "calc" ? calcCell(sh, c, r).text : ((r.cells || {})[c.id] || ""); v = String(v).replace(/\s*\n\s*/g, " ⏎ "); return v.length > 700 ? v.slice(0, 700) + "…" : v; });
+      const line = `${r.id} | ${vals.join(" | ")} | ${flags}`;
+      if (used + line.length > maxChars) { lines.push("…(more rows omitted for length)"); break; }
+      used += line.length; lines.push(line);
+    }
+    out.push(lines.join("\n"));
+  }
+  return out.join("\n\n");
+}
+const aiSystem = () => `You help a project manager track bank integration projects. Today is ${fmtDate(todayISO())} (${todayISO()}). Use ONLY the tracker data given. "Working days" exclude Saturday and Sunday. Rows flagged ETA CROSSED are late; DONE rows are complete. When you refer to specific rows, cite them inline as [[row_id]] using the exact row_id. Be concise and practical. If the data does not contain the answer, say so.`;
+/* tiny safe markdown → HTML with row links */
+function aiHTML(t) {
+  let h = esc(t);
+  h = h.replace(/\[\[([A-Za-z0-9_-]+)\]\]/g, (m, id) => { const r = S.rows[id]; if (!r) return ""; const sh = S.sheets[r.sheetId], tc = titleCol({id: r.sheetId, ...sh}); return `<button type="button" class="airow" data-airow="${id}" title="Open entry">${esc((r.cells || {})[tc?.id] || "entry")}<small>${esc(sh?.name || "")}</small></button>`; });
+  h = h.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/^#{1,4}\s*(.+)$/gm, "<b>$1</b>");
+  h = h.split(/\n/).map(l => /^\s*[-*•]\s+/.test(l) ? `<li>${l.replace(/^\s*[-*•]\s+/, "")}</li>` : /^\s*\d+\.\s+/.test(l) ? `<li>${l.replace(/^\s*\d+\.\s+/, "")}</li>` : l ? `<p>${l}</p>` : "").join("");
+  return h.replace(/(<li>.*?<\/li>)+/g, m => `<ul>${m}</ul>`);
+}
+function sheetPicker(id, preset) {
+  const trks = trackerList(); const sel = new Set(preset);
+  return `<div class="group aipick" id="${id}">${trks.map(t => { const sh = sheetList(t.id); if (!sh.length) return ""; return `<div data-g="${esc(t.id)}"><label class="ck head"><input type="checkbox" data-grp="${esc(t.id)}" ${sh.every(s => sel.has(s.id)) ? "checked" : ""}> ${esc(t.name)} <span class="n">${sh.length} sheets</span></label><div class="kids">${sh.map(s => `<label class="ck"><input type="checkbox" data-sh="${esc(s.id)}" ${sel.has(s.id) ? "checked" : ""}> ${esc(s.name)} <span class="n">${rowsOf(s.id).length}</span></label>`).join("")}</div></div>`; }).join("")}</div>`;
+}
+function wirePicker(root, id) {
+  const box = root.querySelector("#" + id);
+  box.addEventListener("change", e => { if (e.target.dataset.grp) box.querySelectorAll(`[data-g="${CSS.escape(e.target.dataset.grp)}"] [data-sh]`).forEach(k => k.checked = e.target.checked); box.querySelectorAll("[data-grp]").forEach(h => { const ks = [...box.querySelectorAll(`[data-g="${CSS.escape(h.dataset.grp)}"] [data-sh]`)], n = ks.filter(k => k.checked).length; h.checked = n === ks.length; h.indeterminate = n > 0 && n < ks.length; }); });
+  return () => [...box.querySelectorAll("[data-sh]:checked")].map(k => k.dataset.sh);
+}
+let AIP = {tab: "ask", ask: [], q: ""};
+function openAI(tab) {
+  AIP.tab = tab || (AI.key ? AIP.tab : "settings");
+  const tabs = [["ask", "Ask the tracker"], ["email", "Status email"], ["sum", "Summaries"], ["settings", "Settings"]];
+  openDialog({
+    eyebrow: "AI assistant · Gemini", title: "Ask, draft and summarise", saveLabel: "Close",
+    body: () => `<div class="seg aitabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" data-aitab="${k}" aria-pressed="${AIP.tab === k}">${l}</button>`).join("")}</div><div id="aipane"></div>`,
+    mount: root => {
+      const pane = root.querySelector("#aipane");
+      const show = () => { root.querySelectorAll("[data-aitab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.aitab === AIP.tab)); ({ask: paneAsk, email: paneEmail, sum: paneSum, settings: paneSettings})[AIP.tab](pane); };
+      root.addEventListener("click", e => { const b = e.target.closest("[data-aitab]"); if (b) { AIP.tab = b.dataset.aitab; show(); } });
+      root.addEventListener("click", e => { const b = e.target.closest("[data-airow]"); if (!b) return; const r = S.rows[b.dataset.airow]; if (!r) return; closeDialog(true); S.view = "sheet"; S.sheetId = r.sheetId; render(); openDrawer(r.sheetId, b.dataset.airow); });
+      show();
+    },
+    onSave: () => {}
+  });
+  document.querySelector("#dlg .mbox").classList.add("wide");
+}
+const needKey = pane => { if (AI.key) return false; pane.innerHTML = `<div class="banner">Add your Gemini API key in <button class="stamp" type="button" data-aitab="settings">Settings</button> to use AI.</div>`; return true; };
+function paneAsk(pane) {
+  if (needKey(pane)) return;
+  const preset = AIP.askSheets || (S.sheetId ? [S.sheetId] : sheetList().map(s => s.id));
+  const ideas = ["What's pending with the bank for more than 20 working days?", "Which APIs are blocked and why?", "Summarise everything that crossed its ETA", "What changed in the last 7 days?", "Who owns the most open items?"];
+  pane.innerHTML = `<div class="field"><span class="lbl">Answer from these sheets</span>${sheetPicker("ai_ask_sh", preset)}</div>
+    <div class="field"><label for="ai_q">Your question</label><textarea class="inp" id="ai_q" rows="2" placeholder="Ask anything about the selected sheets…">${esc(AIP.q || "")}</textarea>
+      <div class="chips">${ideas.map(q => `<button type="button" class="chip t-neu" data-idea="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>
+    <button class="btn primary" type="button" id="ai_go" style="align-self:flex-start">${ICON.spark} Ask</button>
+    <div class="aiout" id="ai_out">${AIP.last ? aiHTML(AIP.last) : ""}</div>`;
+  const sel = wirePicker(pane, "ai_ask_sh"), q = pane.querySelector("#ai_q"), out = pane.querySelector("#ai_out"), go = pane.querySelector("#ai_go");
+  pane.querySelectorAll("[data-idea]").forEach(b => b.onclick = () => { q.value = b.dataset.idea; q.focus(); });
+  const run = async () => {
+    const ids = sel(); AIP.askSheets = ids; AIP.q = q.value.trim(); if (!AIP.q) { q.focus(); return; } if (!ids.length) { toast("Pick at least one sheet"); return; }
+    go.disabled = true; out.innerHTML = `<div class="aithink">Reading ${ids.length} sheet${ids.length > 1 ? "s" : ""}…</div>`;
+    try { AIP.last = await gemini(`Tracker data:\n\n${sheetsContext(ids)}\n\nQuestion: ${AIP.q}`, {system: aiSystem()}); out.innerHTML = aiHTML(AIP.last) + `<div class="aimeta">${esc(AI.model)} · answers can be wrong, check the linked entries</div>`; }
+    catch (e) { out.innerHTML = `<div class="banner" style="color:var(--bad)">${esc(e.message)}</div>`; }
+    go.disabled = false;
+  };
+  go.onclick = run; q.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); } });
+}
+function paneEmail(pane) {
+  if (needKey(pane)) return;
+  const preset = AIP.mailSheets || sheetList().map(s => s.id);
+  pane.innerHTML = `<div class="field"><span class="lbl">Include these sheets</span>${sheetPicker("ai_m_sh", preset)}</div>
+    <div class="row2" style="flex:none;gap:12px">
+      <div class="field" style="flex:1"><label for="ai_aud">Audience</label><select class="inp" id="ai_aud"><option value="bank">Bank stakeholders</option><option value="internal">Internal team / management</option></select></div>
+      <div class="field" style="flex:1"><label for="ai_per">Period</label><select class="inp" id="ai_per"><option value="this week">This week</option><option value="the last 2 weeks">Last 2 weeks</option><option value="this month">This month</option></select></div>
+      <div class="field" style="flex:1"><label for="ai_tone">Style</label><select class="inp" id="ai_tone"><option value="formal and concise">Formal, concise</option><option value="brief bullet points only">Very brief bullets</option><option value="detailed with context">Detailed</option></select></div></div>
+    <div class="field"><label for="ai_extra">Anything to add? <span class="typ">optional</span></label><input class="inp" id="ai_extra" placeholder="e.g. mention the go-live target of 15 Dec, sign off as Fable team"></div>
+    <button class="btn primary" type="button" id="ai_mgo" style="align-self:flex-start">${ICON.spark} Draft email</button>
+    <div id="ai_mout"></div>`;
+  const sel = wirePicker(pane, "ai_m_sh"), go = pane.querySelector("#ai_mgo"), out = pane.querySelector("#ai_mout");
+  go.onclick = async () => {
+    const ids = sel(); AIP.mailSheets = ids; if (!ids.length) { toast("Pick at least one sheet"); return; }
+    const trk = [...new Set(ids.map(id => trackerList().find(t => t.id === tid(S.sheets[id]))?.name))].filter(Boolean).join(" & ");
+    go.disabled = true; out.innerHTML = `<div class="aithink">Writing the update…</div>`;
+    try {
+      const j = await gemini(`Write a weekly status email for the ${trk || "bank"} project for ${pane.querySelector("#ai_aud").selectedOptions[0].text}, covering ${pane.querySelector("#ai_per").value}. Style: ${pane.querySelector("#ai_tone").value}. ${pane.querySelector("#ai_extra").value}
+Structure the body with short sections: Summary; Completed; In progress; Pending with the bank / blockers; ETA crossed (with days late); Next steps. Use plain text with "- " bullets, no markdown symbols like ** or #. Do not invent facts. Do not include row ids.
+Return JSON: {"subject": string, "body": string}.
+
+Tracker data:
+${sheetsContext(ids)}`, {json: true, system: aiSystem(), temp: 0.4});
+      out.innerHTML = `<div class="field"><label for="ai_subj">Subject</label><input class="inp" id="ai_subj" value="${esc(j.subject || "")}"></div><div class="field"><label for="ai_body">Body</label><textarea class="inp" id="ai_body" rows="16">${esc(j.body || "")}</textarea></div>
+        <div class="row2" style="flex:none"><button class="btn primary" type="button" id="ai_copy" style="flex:none">Copy email</button><button class="btn" type="button" id="ai_again" style="flex:none">Draft again</button></div><span class="hint">Edit freely, then paste into Outlook. Check the facts before sending.</span>`;
+      out.querySelector("#ai_copy").onclick = () => { const t = `Subject: ${out.querySelector("#ai_subj").value}\n\n${out.querySelector("#ai_body").value}`; navigator.clipboard.writeText(t).then(() => toast("Email copied"), () => { out.querySelector("#ai_body").select(); document.execCommand("copy"); toast("Email copied"); }); };
+      out.querySelector("#ai_again").onclick = () => go.click();
+    } catch (e) { out.innerHTML = `<div class="banner" style="color:var(--bad)">${esc(e.message)}</div>`; }
+    go.disabled = false;
+  };
+}
+function paneSum(pane) {
+  if (needKey(pane)) return;
+  const sid = S.sheetId, sh = S.sheets[sid]; if (!sh) { pane.innerHTML = `<div class="banner">Open a sheet first.</div>`; return; }
+  const cols = sh.columns || [], textCols = cols.filter(c => c.type === "long" || c.type === "text"), def = (cols.find(c => c.type === "long" && /remark|summary|update|response|comment/i.test(c.label)) || textCols[0])?.id;
+  const visible = filteredRows({id: sid, ...sh});
+  pane.innerHTML = `<p class="hint" style="margin:0">Sheet: <b>${esc(sh.name)}</b></p>
+    <div class="row2" style="flex:none;gap:12px">
+      <div class="field" style="flex:1"><label for="ai_scol">Remarks column to summarise</label><select class="inp" id="ai_scol">${textCols.map(c => `<option value="${esc(c.id)}" ${c.id === def ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+      <div class="field" style="flex:1"><label for="ai_srows">Rows</label><select class="inp" id="ai_srows">${S.sel.size ? `<option value="sel">Selected rows (${S.sel.size})</option>` : ""}<option value="vis">Rows shown now (${visible.length})</option><option value="all">All rows (${rowsOf(sid).length})</option></select></div></div>
+    <button class="btn primary" type="button" id="ai_sgo" style="align-self:flex-start">${ICON.spark} Summarise</button><div id="ai_sout"></div>`;
+  const go = pane.querySelector("#ai_sgo"), out = pane.querySelector("#ai_sout");
+  go.onclick = async () => {
+    const cid = pane.querySelector("#ai_scol").value, mode = pane.querySelector("#ai_srows").value;
+    const rows = (mode === "sel" ? rowsOf(sid).filter(r => S.sel.has(r.id)) : mode === "vis" ? visible : rowsOf(sid)).filter(r => ((r.cells || {})[cid] || "").trim()).slice(0, 150);
+    if (!rows.length) { out.innerHTML = `<div class="banner">No text in that column for these rows.</div>`; return; }
+    const tc = titleCol({id: sid, ...sh});
+    go.disabled = true; out.innerHTML = `<div class="aithink">Summarising ${rows.length} entries…</div>`;
+    try {
+      const j = await gemini(`For each entry, write the CURRENT status in at most 2 short sentences (max 220 characters), based on the latest dated update first. Keep names, dates and who it is pending with. Return JSON object mapping row_id to summary.\n\n${rows.map(r => `row_id: ${r.id}\ntitle: ${(r.cells || {})[tc?.id] || ""}\ntext: ${String(r.cells[cid]).slice(0, 4000)}`).join("\n---\n")}`, {json: true, system: aiSystem()});
+      const res = rows.map(r => ({r, s: String(j[r.id] || "").trim()})).filter(x => x.s);
+      const tgtOpts = cols.filter(c => (c.type === "long" || c.type === "text") && c.id !== cid);
+      out.innerHTML = `<div class="sumlist">${res.map(x => `<label class="sumrow"><input type="checkbox" data-sr="${x.r.id}" checked><span><b>${esc((x.r.cells || {})[tc?.id] || "Entry")}</b><span class="aitxt" contenteditable="true">${esc(x.s)}</span></span></label>`).join("")}</div>
+        <div class="row2" style="flex:none;align-items:end;gap:10px"><div class="field" style="flex:1"><label for="ai_stgt">Save ticked summaries into</label><select class="inp" id="ai_stgt"><option value="__new">New column “AI summary”</option>${tgtOpts.map(c => `<option value="${esc(c.id)}">${esc(c.label)} (replace)</option>`).join("")}<option value="__top">Top of “${esc(cols.find(c => c.id === cid).label)}” as today's update</option></select></div><button class="btn primary" type="button" id="ai_ssave" style="flex:none">Save</button></div>
+        <span class="hint">You can edit any summary before saving. Undo is available after saving.</span>`;
+      out.querySelector("#ai_ssave").onclick = async () => {
+        let tgt = out.querySelector("#ai_stgt").value; const snaps = [], now = new Date().toISOString(), cur = S.sheets[sid];
+        if (tgt === "__new") { const nc = {id: uid("c"), label: "AI summary", type: "long"}; snaps.push(["sheets", sid, clone(cur)]); const pos = cur.columns.findIndex(c => c.id === cid) + 1; const ncols = [...cur.columns]; ncols.splice(pos, 0, nc); await store.put("sheets", sid, {...cur, columns: ncols}); tgt = nc.id; }
+        const picks = [...out.querySelectorAll("[data-sr]:checked")].map(k => [k.dataset.sr, k.closest(".sumrow").querySelector(".aitxt").textContent.trim()]);
+        await pool(picks.map(([rid, txt]) => () => { const r = S.rows[rid]; snaps.push(["rows", rid, clone(r)]); const cells = {...(r.cells || {})}; if (tgt === "__top") cells[cid] = `${stampText()}(Summary): ${txt}\n${cells[cid] || ""}`; else cells[tgt] = txt; return store.put("rows", rid, {...r, cells, updatedAt: now}); }));
+        closeDialog(true); render(); pushUndo(`${picks.length} summaries saved`, snaps);
+      };
+    } catch (e) { out.innerHTML = `<div class="banner" style="color:var(--bad)">${esc(e.message)}</div>`; }
+    go.disabled = false;
+  };
+}
+function paneSettings(pane) {
+  const opts = () => AI.models.length ? AI.models.map(m => `<option value="${esc(m.id)}" ${m.id === AI.model ? "selected" : ""}>${esc(m.label)}${m.free ? " · free tier" : ""} — ${esc(m.id)}</option>`).join("") : `<option value="">Click “Update models” after adding your key</option>`;
+  pane.innerHTML = `<div class="field"><label for="ai_key">Gemini API key</label><div class="row2" style="flex:none"><input class="inp" id="ai_key" type="password" autocomplete="off" placeholder="AIza…" value="${esc(AI.key)}" style="flex:1"><button class="btn" type="button" id="ai_show" style="flex:none">Show</button></div>
+      <span class="hint">Get a free key at aistudio.google.com/apikey. The key is stored only in this browser, never in the website files or the shared database.</span></div>
+    <div class="field"><label for="ai_model">Model</label><select class="inp" id="ai_model">${opts()}</select>
+      <label class="ck"><input type="checkbox" id="ai_auto" ${AI.auto ? "checked" : ""}> Always use the newest free Flash model when updating</label>
+      <div class="row2" style="flex:none"><button class="btn" type="button" id="ai_upd" style="flex:none">↻ Update models</button><button class="btn" type="button" id="ai_test" style="flex:none">Test</button></div>
+      <span class="hint" id="ai_smsg">${AI.updatedAt ? `Model list updated ${esc(ago(AI.updatedAt))}.` : ""} Models marked “free tier” (Flash, Flash-Lite, Gemma) can be used without billing, within Google's daily limits.</span></div>
+    <div class="banner" style="font-size:12.5px">Tip: in Google Cloud console → Credentials, restrict this key to your website address (HTTP referrer) so it can't be used elsewhere. Entry text you send to AI goes to Google.</div>`;
+  const msg = pane.querySelector("#ai_smsg"), keyIn = pane.querySelector("#ai_key");
+  pane.querySelector("#ai_show").onclick = e => { keyIn.type = keyIn.type === "password" ? "text" : "password"; e.target.textContent = keyIn.type === "password" ? "Show" : "Hide"; };
+  keyIn.addEventListener("change", () => { AI.key = keyIn.value.trim(); saveAI(); });
+  pane.querySelector("#ai_model").addEventListener("change", e => { AI.model = e.target.value; AI.auto = false; pane.querySelector("#ai_auto").checked = false; saveAI(); });
+  pane.querySelector("#ai_auto").addEventListener("change", e => { AI.auto = e.target.checked; saveAI(); });
+  pane.querySelector("#ai_upd").onclick = async () => { AI.key = keyIn.value.trim(); saveAI(); msg.textContent = "Checking Google for the latest models…"; msg.style.color = "";
+    try { await aiLoadModels(); pane.querySelector("#ai_model").innerHTML = opts(); msg.textContent = `Found ${AI.models.length} models. Using ${AI.model}.`; } catch (e) { msg.textContent = e.message; msg.style.color = "var(--bad)"; } };
+  pane.querySelector("#ai_test").onclick = async () => { AI.key = keyIn.value.trim(); saveAI(); msg.textContent = "Testing…"; msg.style.color = "";
+    try { const t = await gemini("Reply with the single word: ready"); msg.textContent = `Working ✓ (${AI.model} said “${t.trim().slice(0, 30)}”)`; msg.style.color = "var(--good)"; } catch (e) { msg.textContent = e.message; msg.style.color = "var(--bad)"; } };
+}
+/* entry form: summarise one field */
+async function summariseField(cid, btn) {
+  const t = $(`#f_${CSS.escape(cid)}`), txt = (t?.value || "").trim();
+  if (!txt) { toast("Nothing to summarise yet"); return; }
+  if (!AI.key) { openAI("settings"); return; }
+  const field = btn.closest(".field"); field.querySelector(".aisum")?.remove();
+  const box = document.createElement("div"); box.className = "aisum"; box.innerHTML = `<span class="aithink">Summarising…</span>`; field.appendChild(box);
+  try {
+    const s = await gemini(`Summarise the CURRENT status of this tracker entry in at most 2 short sentences (max 220 characters). Start from the latest dated update, keep names, dates and who it's pending with.\n\n${txt.slice(0, 8000)}`, {system: aiSystem()});
+    box.innerHTML = `<div class="aitxt">${esc(s.trim())}</div><div class="row2" style="flex:none"><button type="button" class="stamp" data-aiuse="${esc(cid)}">Add as today's update</button><button type="button" class="stamp" data-aiuse="${esc(cid)}" data-mode="copy">Copy</button></div>`;
+  } catch (e) { box.innerHTML = `<span style="color:var(--bad)">${esc(e.message)}</span>`; }
+}
+/* plain-English filters */
+async function aiFilter(q) {
+  if (!AI.key) throw new Error("Add your Gemini API key in AI → Settings first.");
+  const sid = S.sheetId, sh = {id: sid, ...S.sheets[sid]}, cols = sh.columns || [];
+  const schema = cols.map(c => { const k = fkind(c); return {id: c.id, label: c.label, type: c.type === "calc" ? `number (${CALC[c.calc?.kind]?.name || "calculated"}, in days)` : c.type, ...(c.type === "select" ? {options: c.options || []} : {}), allowed_ops: k === "in" ? ["in", "empty", "notempty"] : k === "date" ? ["before", "after", "on", "between", "overdue", "next7", "last7", "thismonth", "empty", "notempty"] : k === "num" ? ["gt", "lt", "eq", "between", "empty", "notempty"] : ["contains", "notcontains", "empty", "notempty"]}; });
+  const sample = rowsOf(sid).slice(0, 8).map(r => Object.fromEntries(cols.filter(c => c.type !== "calc").map(c => [c.label, String((r.cells || {})[c.id] || "").slice(0, 60)])));
+  const j = await gemini(`Convert the user's request into filters for a table. Today is ${todayISO()}.
+Columns: ${JSON.stringify(schema)}
+Example rows: ${JSON.stringify(sample)}
+Rules: "in" takes val as an array of exact option values; date ops take val as "YYYY-MM-DD" (between: ["YYYY-MM-DD","YYYY-MM-DD"]); number ops take numbers (between: [min,max]); contains takes a text val; overdue/next7/last7/thismonth/empty/notempty take val null. For things like "expiring in the next 3 months" use between with today and the end date. Use "search" only for free-text matching across all columns when no single column fits.
+Return JSON: {"filters":[{"col": column id, "op": string, "val": any}], "search": string or "", "explanation": short string}.
+Request: ${q}`, {json: true, system: "You output only valid JSON."});
+  const ok = (j.filters || []).filter(f => { const c = cols.find(x => x.id === f.col); if (!c) return false; const k = fkind(c); const sc = schema.find(x => x.id === c.id); if (!sc.allowed_ops.includes(f.op)) return false; if (f.op === "in") { f.val = (Array.isArray(f.val) ? f.val : [f.val]).map(String); return f.val.length; } if (f.op === "between") return Array.isArray(f.val) && f.val.length === 2; if (["contains", "notcontains", "before", "after", "on", "gt", "lt", "eq"].includes(f.op)) return f.val != null && f.val !== ""; return true; });
+  if (!ok.length && !j.search) throw new Error("Couldn't turn that into a filter. Try naming a column, e.g. “Status is WIP”.");
+  S.filters[sid] = ok; S.q = j.search || ""; saveFilters(); render();
+  return ok.length + (j.search ? 1 : 0);
+}
+
 /* ---------- Generic dialog ---------- */
 let DLG = null;
 function openDialog(o) {
@@ -2487,6 +2750,7 @@ document.addEventListener("click", e => {
     case "backup": openBackup(); break;
     case "splitsec": splitExistingSheet(); break;
     case "gsave": saveGrid(); break;
+    case "ai": openAI(); break;
     case "fmt": openFormat(); break;
     case "addrow": addRowInline(); break;
     case "addcolq": openQuickCol(b); break;
