@@ -427,6 +427,33 @@ table.xl tr.imp td.dirty,table.xl tr.breach td.dirty{background:color-mix(in srg
 table.xl tr.gnew td.rn{color:var(--accent);font-weight:700}
 table.xl tr.gnew td:not(.rn):not(.dirty){background:color-mix(in srgb,var(--accent-soft) 25%,var(--surface))}
 table.xl tbody tr:hover td.dirty{background:color-mix(in srgb,#FFD54A 40%,var(--surface))}
+/* Table format */
+.tablewrap table{font-size:var(--tfs,14px)}
+.tablewrap td{height:var(--rowh,44px)}
+.tablewrap .clamp{-webkit-line-clamp:var(--lines,3)}
+.tablewrap[data-wrap="all"] .clamp{display:block;-webkit-line-clamp:unset;overflow:visible}
+.tablewrap[data-grid="all"] td,.tablewrap[data-grid="all"] th{border-right:1px solid var(--line)}
+.tablewrap[data-grid="none"] td{border-bottom-color:transparent}
+.tablewrap[data-stripe="1"] tbody tr:not(.imp):not(.breach):not(.sel):not(.addrow):nth-child(even) td{background:color-mix(in srgb,var(--surface-2) 45%,var(--surface))}
+.tablewrap[data-head="bold"] th{background:var(--accent);color:var(--accent-ink)}
+.tablewrap[data-head="bold"] th .fx{color:inherit}
+.tablewrap[data-head="plain"] th{background:var(--surface);border-bottom:2px solid var(--line)}
+.tablewrap[data-freeze="1"] td:nth-child(2),.tablewrap[data-freeze="1"] th:nth-child(2){position:sticky;left:104px;z-index:2;box-shadow:2px 0 0 var(--line)}
+.tablewrap[data-freeze="1"] td:nth-child(2){background:var(--surface)}
+.tablewrap[data-freeze="1"] th:nth-child(2){z-index:4}
+.tablewrap th{position:sticky}
+.rsz{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:5;touch-action:none}
+.rsz::after{content:"";position:absolute;top:22%;bottom:22%;left:4px;width:2px;border-radius:2px;background:transparent}
+th:hover .rsz::after,.rsz:hover::after{background:var(--accent)}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing *{cursor:col-resize!important}
+tr.addrow td{height:auto;padding:4px 8px;background:var(--surface)!important;border-bottom:0}
+tr.addrow button{all:unset;cursor:pointer;display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px;color:var(--accent);font-weight:700;font-size:13.5px;position:sticky;left:8px}
+tr.addrow button svg{width:15px;height:15px}
+tr.addrow button:hover,tr.addrow button:focus-visible{background:var(--accent-soft)}
+tr.addrow button.hidnote{color:var(--muted);font-weight:600;left:auto}
+.colmenu .opts .opt{padding:5px 10px;font-size:12.5px}
+.colmenu .opts .opt[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -652,6 +679,7 @@ const ICON = {
   side:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>',
   expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
   shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
+  format:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>',
   palette:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.1-4-7.5-9-7.5Z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg>',
   dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
 };
@@ -1109,8 +1137,10 @@ function cellHTML(c, v) {
 }
 function renderSheet(main) {
   const sh = {id: S.sheetId, ...S.sheets[S.sheetId]}, cols = sh.columns || [];
+  const vp = sheetVP(sh.id), vcols = cols.filter(c => !vp.hidden.includes(c.id)), F = VP.fmt;
+  const wst = c => vp.widths[c.id] ? ` style="width:${vp.widths[c.id]}px;min-width:${vp.widths[c.id]}px;max-width:${vp.widths[c.id]}px"` : "";
   const all = rowsOf(sh.id), rows = filteredRows(sh);
-  const layout = S.layout[sh.id] || (matchMedia("(max-width:640px)").matches || (cols.length <= 5 && cols.some(c => c.type === "long")) ? "cards" : "table");
+  const layout = (S.layout[sh.id] === "grid" ? "table" : S.layout[sh.id]) || (matchMedia("(max-width:640px)").matches || (cols.length <= 5 && cols.some(c => c.type === "long")) ? "cards" : "table");
   const flist = S.filters[sh.id] || [], fActive = flist.length > 0 || !!S.onlyRed[sh.id];
   const states = new Map(all.map(r => [r.id, rowState(sh, r)]));
   const breached = all.filter(r => states.get(r.id).breach), imps = all.filter(r => r.imp);
@@ -1118,17 +1148,15 @@ function renderSheet(main) {
   const maxLate = breached.reduce((m, r) => Math.max(m, states.get(r.id).late), 0);
   const tc = titleCol(sh), sc = statusCol(sh);
   let body;
-  if (!all.length && layout === "grid") body = renderGrid(sh, rows, cols);
-  else if (!all.length) body = `<div class="emptystate"><h3>This sheet is ready for its first entry</h3><p>${cols.length} columns set up: ${esc(cols.map(c => c.label).join(", "))}.</p><div class="row2" style="justify-content:center;flex:none"><button class="btn primary" type="button" data-act="add" style="flex:none">${ICON.plus} Add the first entry</button><button class="btn" type="button" data-act="paste" style="flex:none">Paste rows from Excel</button></div></div>`;
-  else if (!rows.length) body = `<div class="emptystate"><h3>Nothing matches</h3><p>Try a different search or clear the filters.</p><button class="btn" type="button" data-act="clear">Clear search &amp; filters</button></div>`;
-  else if (layout === "grid") body = renderGrid(sh, rows, cols);
+  if (!all.length && layout === "cards") body = `<div class="emptystate"><h3>This sheet is ready for its first entry</h3><p>${cols.length} columns set up: ${esc(cols.map(c => c.label).join(", "))}.</p><div class="row2" style="justify-content:center;flex:none"><button class="btn primary" type="button" data-act="add" style="flex:none">${ICON.plus} Add the first entry</button><button class="btn" type="button" data-act="paste" style="flex:none">Paste rows from Excel</button></div></div>`;
+  else if (!rows.length && all.length) body = `<div class="emptystate"><h3>Nothing matches</h3><p>Try a different search or clear the filters.</p><button class="btn" type="button" data-act="clear">Clear search &amp; filters</button></div>`;
   else if (layout === "cards") body = `<div class="cards">${rows.map(r => {
-      const c = r.cells || {}, st = states.get(r.id), rest = cols.filter(x => x !== tc && x !== sc && c[x.id]);
+      const c = r.cells || {}, st = states.get(r.id), rest = vcols.filter(x => x !== tc && x !== sc && c[x.id]);
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
       return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${rest.filter(x => x.type !== "select").slice(0, 3).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
     }).join("")}</div>`;
-  else body = `<div class="tablewrap"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${cols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcol" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
-      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${cols.map(c => `<td class="c-${c.type} ${c.type === "calc" ? "" : "editable"}" data-cell="${esc(c.id)}" title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : "Click to edit"}">${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}</tbody></table></div>`;
+  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
+      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${c.type === "calc" ? "" : "editable"}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : "Click to edit"}">${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
 
   const noteHTML = S.noteEdit === sh.id
     ? `<div class="note-edit"><textarea class="inp" id="noteTa" rows="3" placeholder="Add context for this sheet: scope, a reminder, a dependency…">${esc(sh.note || "")}</textarea><div class="acts"><button class="btn primary" type="button" data-act="notesave">Save note</button><button class="btn ghost" type="button" data-act="notecancel">Cancel</button>${sh.note ? `<span class="sp" style="flex:1"></span><button class="btn ghost" type="button" data-act="noteclear" style="color:var(--bad)">Remove note</button>` : ""}</div></div>`
@@ -1143,8 +1171,9 @@ function renderSheet(main) {
   ${alertHTML}
   <div class="toolbar">
     <label class="search">${ICON.search}<input id="q" type="search" placeholder="Search ${esc(sh.name)}…" value="${esc(S.q)}" aria-label="Search entries"></label>
-    <div class="seg" role="group" aria-label="Layout"><button type="button" data-layout="table" aria-pressed="${layout === "table"}">Table</button><button type="button" data-layout="cards" aria-pressed="${layout === "cards"}">Cards</button><button type="button" data-layout="grid" aria-pressed="${layout === "grid"}" title="Edit like Excel">Grid</button></div>
+    <div class="seg" role="group" aria-label="Layout"><button type="button" data-layout="table" aria-pressed="${layout === "table"}">Table</button><button type="button" data-layout="cards" aria-pressed="${layout === "cards"}">Cards</button></div>
     <button class="btn" type="button" data-act="filter">${ICON.filter}<span class="bl">Filter</span>${flist.length ? ` <span class="badge">${flist.length}</span>` : ""}</button>
+    <button class="btn" type="button" data-act="fmt" title="Table format: gridlines, row height, hidden columns" aria-label="Table format">${ICON.format}<span class="bl">Format</span>${vp.hidden.length ? ` <span class="badge">${vp.hidden.length}</span>` : ""}</button>
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
@@ -1443,7 +1472,7 @@ function closeColMenu() { $("#colMenu")?.remove(); CM = null; }
 function openColMenu(colId, anchor) {
   closeColMenu();
   const sh = S.sheets[S.sheetId], cols = sh.columns || [], i = cols.findIndex(c => c.id === colId), c = cols[i]; if (!c) return;
-  CM = {colId};
+  CM = {colId, t: Date.now()};
   const m = document.createElement("div"); m.className = "colmenu"; m.id = "colMenu"; m.setAttribute("role", "menu");
   m.innerHTML = `<div class="ttl">${esc(TYPES[c.type] || "")}${c.type === "calc" ? " · " + esc(CALC[c.calc?.kind]?.name || "") : ""}</div>
     <div class="rn"><input class="inp" id="cmName" value="${esc(c.label)}" aria-label="Column name"><button class="btn primary" type="button" data-cm="rename">Rename</button></div><hr>
@@ -1452,6 +1481,7 @@ function openColMenu(colId, anchor) {
     ${c.type === "date" ? `<button type="button" data-cm="aging">⏱ Add aging from this date</button>` : ""}
     ${c.type === "calc" || c.type === "select" ? `<button type="button" data-cm="edit">✎ Edit ${c.type === "calc" ? "calculation" : "dropdown options"}</button>` : ""}
     <hr><button type="button" data-cm="left" ${i === 0 ? "disabled style='opacity:.4'" : ""}>← Move left</button><button type="button" data-cm="right" ${i === cols.length - 1 ? "disabled style='opacity:.4'" : ""}>→ Move right</button>
+    <button type="button" data-cm="hide">⊘ Hide column</button><button type="button" data-cm="width">↔ Reset width</button>
     <hr><button type="button" class="red" data-cm="delete">${ICON.trash} Delete column</button>`;
   document.body.appendChild(m);
   const r = anchor.getBoundingClientRect();
@@ -1469,6 +1499,8 @@ function openColMenu(colId, anchor) {
       case "filter": closeColMenu(); openFilter(null, colId); break;
       case "aging": closeColMenu(); openAddColumn("aging", colId); break;
       case "edit": closeColMenu(); openModal(S.sheetId); break;
+      case "hide": { const v = sheetVP(S.sheetId); if (!v.hidden.includes(colId)) v.hidden.push(colId); saveVP(); closeColMenu(); render(); toast(`“${c.label}” hidden. Use Format to show it again`); break; }
+      case "width": { delete sheetVP(S.sheetId).widths[colId]; saveVP(); closeColMenu(); render(); break; }
       case "left": case "right": { const k = b.dataset.cm === "left" ? j - 1 : j + 1; [cs[j], cs[k]] = [cs[k], cs[j]]; save(cs, "Column moved"); break; }
       case "delete": if (!b.classList.contains("armed")) { b.classList.add("armed"); b.innerHTML = "Click again to delete this column"; return; } cs.splice(j, 1); save(cs, `Column “${c.label}” deleted`); break;
     }
@@ -1476,7 +1508,7 @@ function openColMenu(colId, anchor) {
 }
 document.addEventListener("mousedown", e => { if (CM && !e.target.closest("#colMenu") && !e.target.closest("[data-colmenu]")) closeColMenu(); });
 window.addEventListener("resize", closeColMenu);
-document.addEventListener("scroll", e => { if (CM && !e.target.closest?.("#colMenu")) closeColMenu(); }, true);
+document.addEventListener("scroll", e => { if (CM && Date.now() - (CM.t || 0) > 400 && !e.target.closest?.("#colMenu")) closeColMenu(); }, true);
 
 /* ---------- Drawer (entry form) ---------- */
 let D = null; // {sheetId, rowId, cells}
@@ -1933,6 +1965,106 @@ async function saveGrid() {
 const gridHasFocus = () => !!document.activeElement?.classList?.contains("gc");
 window.addEventListener("beforeunload", e => { if (Object.keys(S.gedits).some(sid => gridDirtyCount(sid))) { e.preventDefault(); e.returnValue = ""; } });
 
+/* ---------- Table view preferences (per browser) ---------- */
+const VP_DEF = {grid: "rows", stripe: false, head: "light", size: "m", rowh: 44, lines: "3", freeze: false};
+let VP = {fmt: {...VP_DEF}, sheets: {}};
+try { const v = JSON.parse(localStorage.getItem("bcp-view") || "null"); if (v) VP = {fmt: {...VP_DEF, ...(v.fmt || {})}, sheets: v.sheets || {}}; } catch (e) {}
+const saveVP = () => { try { localStorage.setItem("bcp-view", JSON.stringify(VP)); } catch (e) {} };
+function sheetVP(sid) { const v = VP.sheets[sid] = VP.sheets[sid] || {}; v.hidden = v.hidden || []; v.widths = v.widths || {}; return v; }
+function openFormat() {
+  const sid = S.sheetId, sh = S.sheets[sid], cols = sh.columns || [], before = JSON.stringify(VP);
+  const ch = (id, val, opts) => `<div class="choices" id="${id}">${opts.map(([v, b, d]) => `<button type="button" class="choice" data-v="${v}" aria-pressed="${String(val) === String(v)}"><b>${b}</b>${d ? `<span>${d}</span>` : ""}</button>`).join("")}</div>`;
+  openDialog({
+    eyebrow: sh.name, title: "Table format", saveLabel: "Done",
+    body: () => {
+      const F = VP.fmt, v = sheetVP(sid);
+      return `<div class="field"><span class="lbl">Gridlines</span>${ch("fm_grid", F.grid, [["none", "None", "Clean"], ["rows", "Rows", "Lines between rows"], ["all", "All", "Excel-style grid"]])}</div>
+      <div class="field"><span class="lbl">Header</span>${ch("fm_head", F.head, [["light", "Light", "Soft grey"], ["bold", "Bold", "Theme colour"], ["plain", "Plain", "No fill"]])}</div>
+      <div class="row2" style="flex:none;gap:16px">
+        <div class="field" style="flex:1"><span class="lbl">Text size</span>${ch("fm_size", F.size, [["s", "Small"], ["m", "Normal"], ["l", "Large"]])}</div>
+        <div class="field" style="flex:1"><span class="lbl">Long text shows</span>${ch("fm_lines", F.lines, [["1", "1 line"], ["3", "3 lines"], ["all", "Everything"]])}</div></div>
+      <div class="field"><label for="fm_rowh">Row height <span class="typ" id="fm_rowv">${F.rowh}px</span></label><input type="range" id="fm_rowh" min="30" max="140" step="2" value="${F.rowh}" style="accent-color:var(--accent)"></div>
+      <div class="field"><span class="lbl">Options</span>
+        <label class="ck"><input type="checkbox" id="fm_stripe" ${F.stripe ? "checked" : ""}> Striped rows</label>
+        <label class="ck"><input type="checkbox" id="fm_freeze" ${F.freeze ? "checked" : ""}> Freeze first column while scrolling sideways</label></div>
+      <div class="field"><span class="lbl">Columns in this sheet <span class="typ">untick to hide</span></span><div class="group">${cols.map(c => `<label class="ck"><input type="checkbox" data-vis="${esc(c.id)}" ${v.hidden.includes(c.id) ? "" : "checked"}> ${esc(c.label)}${v.widths[c.id] ? `<span class="n">${v.widths[c.id]}px</span>` : ""}</label>`).join("")}</div>
+        <div class="row2" style="flex:none"><button class="btn" type="button" id="fm_showall" style="flex:none">Show all columns</button><button class="btn" type="button" id="fm_resetw" style="flex:none">Reset column widths</button></div>
+        <span class="hint">Drag the edge of a column heading to resize it. These settings are saved in this browser and don't change what others see.</span></div>
+      <button class="btn ghost" type="button" id="fm_reset" style="align-self:flex-start">Restore default format</button>`;
+    },
+    mount: root => {
+      const F = VP.fmt, live = () => { saveVP(); render(); };
+      [["fm_grid", "grid"], ["fm_head", "head"], ["fm_size", "size"], ["fm_lines", "lines"]].forEach(([id, key]) => { const g = root.querySelector("#" + id); pressGroup(g, ".choice", "v"); g.addEventListener("pick", () => { F[key] = g.dataset.v; live(); }); });
+      root.querySelector("#fm_rowh").addEventListener("input", e => { F.rowh = +e.target.value; root.querySelector("#fm_rowv").textContent = F.rowh + "px"; live(); });
+      root.querySelector("#fm_stripe").addEventListener("change", e => { F.stripe = e.target.checked; live(); });
+      root.querySelector("#fm_freeze").addEventListener("change", e => { F.freeze = e.target.checked; live(); });
+      root.addEventListener("change", e => { const id = e.target.dataset.vis; if (!id) return; const v = sheetVP(sid); v.hidden = e.target.checked ? v.hidden.filter(x => x !== id) : [...new Set([...v.hidden, id])]; live(); });
+      root.querySelector("#fm_showall").onclick = () => { sheetVP(sid).hidden = []; root.querySelectorAll("[data-vis]").forEach(k => k.checked = true); live(); };
+      root.querySelector("#fm_resetw").onclick = () => { sheetVP(sid).widths = {}; live(); root.querySelectorAll(".ck .n").forEach(n => n.remove()); };
+      root.querySelector("#fm_reset").onclick = () => { VP.fmt = {...VP_DEF}; saveVP(); closeDialog(true); render(); openFormat(); };
+    },
+    onSave: () => { saveVP(); toast("Table format saved"); },
+    onCancel: () => { VP = JSON.parse(before); saveVP(); render(); }
+  });
+}
+/* column resize by dragging the heading edge */
+let RSZ = null;
+document.addEventListener("pointerdown", e => {
+  const h = e.target.closest?.(".rsz"); if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  const th = h.closest("th"), id = h.dataset.rsz;
+  RSZ = {id, th, x: e.clientX, w: th.getBoundingClientRect().width, cells: [...document.querySelectorAll(`.tablewrap td[data-cell="${CSS.escape(id)}"]`)]};
+  h.setPointerCapture?.(e.pointerId); document.body.classList.add("resizing");
+});
+document.addEventListener("pointermove", e => {
+  if (!RSZ) return; const w = Math.max(60, Math.min(900, Math.round(RSZ.w + e.clientX - RSZ.x)));
+  RSZ.cur = w; [RSZ.th, ...RSZ.cells].forEach(el => { el.style.width = el.style.minWidth = el.style.maxWidth = w + "px"; });
+});
+document.addEventListener("pointerup", () => {
+  if (!RSZ) return; if (RSZ.cur) { sheetVP(S.sheetId).widths[RSZ.id] = RSZ.cur; saveVP(); }
+  RSZ = null; document.body.classList.remove("resizing");
+});
+document.addEventListener("dblclick", e => { const h = e.target.closest?.(".rsz"); if (!h) return; delete sheetVP(S.sheetId).widths[h.dataset.rsz]; saveVP(); render(); });
+document.addEventListener("dragstart", e => { if (e.target.closest?.(".rsz") || RSZ) e.preventDefault(); }, true);
+/* add a row right in the table */
+async function addRowInline() {
+  const sid = S.sheetId, sh = S.sheets[sid]; if (!sh) return;
+  if ((S.layout[sid] || "") === "cards") { openDrawer(sid, null); return; }
+  const cols = sh.columns || [], cells = {};
+  cols.forEach(c => { if (c.type === "number" && /^(sr|sl|s\.?no|#|no)/i.test(c.label)) cells[c.id] = String(rowsOf(sid).reduce((m, r) => Math.max(m, +(r.cells || {})[c.id] || 0), 0) + 1); });
+  const id = uid("r"), order = rowsOf(sid).reduce((m, r) => Math.max(m, r.order || 0), 0) + 1;
+  S.q = ""; S.filters[sid] = []; S.onlyRed[sid] = false;
+  await store.put("rows", id, {sheetId: sid, order, cells, updatedAt: new Date().toISOString()});
+  render(); pushUndo("Row added", [["rows", id, null]]);
+  const vp = sheetVP(sid), first = cols.find(c => c.type !== "calc" && c.type !== "number" && !vp.hidden.includes(c.id));
+  requestAnimationFrame(() => { const tr = document.getElementById("row-" + id); if (!tr) return; tr.scrollIntoView({block: "nearest"}); tr.classList.add("flash"); const td = first && tr.querySelector(`td[data-cell="${CSS.escape(first.id)}"]`); if (td) openCellPop(td); });
+}
+/* quick add column from the table header */
+function openQuickCol(anchor) {
+  closeColMenu(); closeCellPop();
+  const m = document.createElement("div"); m.className = "colmenu"; m.id = "colMenu"; CM = {colId: "__new", t: Date.now()};
+  const T = [["text", "Free text"], ["select", "Dropdown"], ["date", "Date"], ["number", "Number"], ["long", "Long text"]];
+  m.innerHTML = `<div class="ttl">New column</div><div class="rn"><input class="inp" id="qcName" placeholder="Column name"></div>
+    <div class="opts" id="qcType" style="padding:4px 6px">${T.map(([v, l], i) => `<button type="button" class="opt" data-qt="${v}" aria-pressed="${i === 0}">${l}</button>`).join("")}</div>
+    <div class="rn" id="qcOptsRow" hidden><input class="inp" id="qcOpts" placeholder="Options, comma separated (Open, WIP, Closed)"></div>
+    <div class="rn"><button class="btn primary" type="button" id="qcAdd" style="flex:1;justify-content:center">Add column</button></div>
+    <button type="button" id="qcMore">More options (aging, formulas, position)…</button>`;
+  document.body.appendChild(m);
+  const r = anchor.getBoundingClientRect(); m.style.top = Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 4) + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + "px";
+  let type = "text"; const nm = m.querySelector("#qcName"); nm.focus({preventScroll: true});
+  m.querySelector("#qcType").addEventListener("click", e => { const b = e.target.closest("[data-qt]"); if (!b) return; type = b.dataset.qt; m.querySelectorAll("[data-qt]").forEach(x => x.setAttribute("aria-pressed", x === b)); m.querySelector("#qcOptsRow").hidden = type !== "select"; });
+  const add = () => {
+    const label = nm.value.trim(); if (!label) { nm.focus(); toast("Type a column name"); return; }
+    const sh = S.sheets[S.sheetId], c = {id: uid("c"), label, type};
+    if (type === "select") c.options = [...new Set(m.querySelector("#qcOpts").value.split(",").map(x => x.trim()).filter(Boolean))];
+    const sn = snap("sheets", [S.sheetId]); store.put("sheets", S.sheetId, {...sh, columns: [...(sh.columns || []), c]}); closeColMenu(); render(); pushUndo(`Column “${label}” added`, sn);
+    requestAnimationFrame(() => { const tw = document.querySelector(".tablewrap"); if (tw) tw.scrollLeft = tw.scrollWidth; });
+  };
+  m.querySelector("#qcAdd").onclick = add;
+  m.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); add(); } if (e.key === "Escape") { e.stopPropagation(); closeColMenu(); } });
+  m.querySelector("#qcMore").onclick = () => { closeColMenu(); openAddColumn(); };
+}
+
 /* ---------- Generic dialog ---------- */
 let DLG = null;
 function openDialog(o) {
@@ -2242,6 +2374,9 @@ document.addEventListener("click", e => {
     case "backup": openBackup(); break;
     case "splitsec": splitExistingSheet(); break;
     case "gsave": saveGrid(); break;
+    case "fmt": openFormat(); break;
+    case "addrow": addRowInline(); break;
+    case "addcolq": openQuickCol(b); break;
     case "gdiscard": S.gedits[S.sheetId] = {}; S.gnew[S.sheetId] = []; render(); toast("Unsaved changes discarded"); break;
     case "xlupdate": $("#fileIn").click(); break;
     case "bulkset": openBulkSet(); break;
