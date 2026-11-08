@@ -561,6 +561,10 @@ td.rmk .clamp{padding-right:22px}
 .wfpick .wfopt.t-bad{background:var(--bad-bg);color:var(--bad)}
 .wfpick .wfopt.t-neu{background:var(--neu-bg);color:var(--neu)}
 .wfpick .wfopt.t-info{background:var(--info-bg);color:var(--info)}
+.cardbar{display:flex;justify-content:flex-end;margin:0 0 10px}
+.cardbar .btn{font-size:13px}
+.cardbar .hint{font-weight:400}
+.cs-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px 12px;max-height:220px;overflow:auto;margin-top:4px}
 .wfopt .wfi{font-family:var(--f-mono);font-size:10.5px;opacity:.7;min-width:16px}
 .wfopt[aria-pressed="true"]{border-color:currentColor;box-shadow:0 0 0 2px var(--surface) inset}
 .wfopt:hover,.wfopt:focus-visible{border-color:currentColor}
@@ -952,6 +956,7 @@ function statusCol(sh) {
 }
 function titleCol(sh) {
   const cols = sh.columns || [];
+  const pick = sh.titleCol && cols.find(c => c.id === sh.titleCol); if (pick) return pick;
   return cols.find(c => /name|api|module|actionable|parameter|item|title|task/i.test(c.label) && c.type !== "number" && c.type !== "date") || cols.find(c => c.type === "text") || cols.find(c => c.type === "long") || cols[0];
 }
 function lastUpdated(rows) { return rows.reduce((m, r) => (r.updatedAt || "") > m ? r.updatedAt : m, ""); }
@@ -1282,12 +1287,12 @@ function renderSheet(main) {
   let body;
   if (!all.length && layout === "cards") body = `<div class="emptystate"><h3>This sheet is ready for its first entry</h3><p>${cols.length} columns set up: ${esc(cols.map(c => c.label).join(", "))}.</p><div class="row2" style="justify-content:center;flex:none"><button class="btn primary" type="button" data-act="add" style="flex:none">${ICON.plus} Add the first entry</button><button class="btn" type="button" data-act="paste" style="flex:none">Paste rows from Excel</button></div></div>`;
   else if (!rows.length && all.length) body = `<div class="emptystate"><h3>Nothing matches</h3><p>Try a different search or clear the filters.</p><button class="btn" type="button" data-act="clear">Clear search &amp; filters</button></div>`;
-  else if (layout === "cards") body = `<div class="cards">${rows.map(r => {
+  else if (layout === "cards") body = `<div class="cardbar"><button type="button" class="btn ghost" data-act="cardset" title="Choose the column used as each card's heading">Card heading: <b>${esc(tc?.label || "—")}</b>${sh.titleCol ? "" : " <span class=\"hint\">(automatic)</span>"} ▾</button></div><div class="cards">${rows.map(r => {
       const c = r.cells || {}, st = states.get(r.id), rest = vcols.filter(x => x !== tc && x !== sc && c[x.id]);
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
-      return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${rest.filter(x => x.type !== "select").slice(0, 3).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
+      return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${(Array.isArray(sh.cardFields) ? sh.cardFields.map(id => vcols.find(x => x.id === id)).filter(x => x && x !== tc && c[x.id] && x.type !== "calc") : rest.filter(x => x.type !== "select").slice(0, 3)).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
     }).join("")}</div>`;
-  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${c.id === sh.assigneeCol ? ' <span class="fx" title="Assignee column">@</span>' : ""}${c.id === sh.statusCol ? ' <span class="fx" title="Status workflow column">◉</span>' : ""}${c.id === sh.ownerCol && sh.assigneeCol ? ' <span class="fx" title="Filled from assignee">auto</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
+  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${c.id === sh.assigneeCol ? ' <span class="fx" title="Assignee column">@</span>' : ""}${c.id === sh.statusCol ? ' <span class="fx" title="Status workflow column">◉</span>' : ""}${c.id === sh.titleCol ? ' <span class="fx" title="Card heading column">H</span>' : ""}${c.id === sh.ownerCol && sh.assigneeCol ? ' <span class="fx" title="Filled from assignee">auto</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
       <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"} ${c.id === sh.remarkCol ? "rmk" : ""}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : c.id === sh.remarkCol ? "Click to add an update" : "Click to edit"}">${c.id === sh.remarkCol && AI_ON && (r.cells || {})[c.id] ? `<button type="button" class="rmk-ai" data-rmksum title="AI summary">${ICON.spark}</button>` : ""}${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
 
   const noteHTML = S.noteEdit === sh.id
@@ -1309,7 +1314,7 @@ function renderSheet(main) {
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="statusset">Status column…</button><button type="button" data-act="workflow">Status workflow…</button><button type="button" data-act="assignset">Assignee & owner…</button><button type="button" data-act="people">People & owners…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="cardset">Card heading & fields…</button><button type="button" data-act="statusset">Status column…</button><button type="button" data-act="workflow">Status workflow…</button><button type="button" data-act="assignset">Assignee & owner…</button><button type="button" data-act="people">People & owners…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -1563,6 +1568,29 @@ function openWorkflow() {
       let n = 0;
       if (renames.size) { const tasks = []; sheetList(t.id).filter(s => s.statusCol).forEach(sh => rowsOf(sh.id).forEach(r => { const v = (r.cells || {})[sh.statusCol]; if (renames.has(v)) { snaps.push(["rows", r.id, clone(S.rows[r.id])]); n++; tasks.push(() => store.put("rows", r.id, {...S.rows[r.id], cells: {...S.rows[r.id].cells, [sh.statusCol]: renames.get(v)}})); } })); await pool(tasks); }
       render(); pushUndo(`Status workflow saved${n ? ` · ${n} entries renamed` : ""}`, snaps);
+    }
+  });
+}
+function openCardSettings() {
+  const sid = S.sheetId, sh = S.sheets[sid], cols = (sh.columns || []).filter(c => c.type !== "calc"), auto = titleCol({...sh, titleCol: null});
+  const sample = rowsOf(sid).slice(0, 1)[0];
+  openDialog({
+    eyebrow: sh.name, title: "Card heading & fields", saveLabel: "Save",
+    body: () => `<div class="field"><label for="cs_title">Card heading column</label><select class="inp" id="cs_title"><option value="">Automatic (${esc(auto?.label || "first text column")})</option>${cols.map(c => `<option value="${esc(c.id)}" ${c.id === sh.titleCol ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+      <div class="hint" id="cs_prev"></div>
+      <div class="field"><label>Details shown under the heading</label><label class="ck"><input type="checkbox" id="cs_auto" ${Array.isArray(sh.cardFields) ? "" : "checked"}> Automatic (first 3 filled text and date columns)</label>
+      <div id="cs_fields" class="cs-fields">${cols.filter(c => c.type !== "select").map(c => `<label class="ck"><input type="checkbox" value="${esc(c.id)}" ${Array.isArray(sh.cardFields) && sh.cardFields.includes(c.id) ? "checked" : ""}> ${esc(c.label)}</label>`).join("")}</div></div>
+      <p class="hint" style="margin:0">The heading is also used as the title of the entry form and in AI answers. Dropdown values (status, owner…) always show as coloured tags on the card.</p>`,
+    mount: root => {
+      const sel = root.querySelector("#cs_title"), prev = root.querySelector("#cs_prev"), ck = root.querySelector("#cs_auto"), box = root.querySelector("#cs_fields");
+      const upd = () => { const c = cols.find(x => x.id === sel.value) || auto; prev.innerHTML = sample ? `Example: <b>${esc((sample.cells || {})[c?.id] || "Untitled entry")}</b>` : ""; box.style.opacity = ck.checked ? .45 : 1; box.querySelectorAll("input").forEach(i => i.disabled = ck.checked); };
+      sel.addEventListener("change", upd); ck.addEventListener("change", upd); upd();
+    },
+    onSave: async root => {
+      const snaps = snap("sheets", [sid]), cur = S.sheets[sid], tcv = root.querySelector("#cs_title").value || null;
+      const cf = root.querySelector("#cs_auto").checked ? null : [...root.querySelectorAll("#cs_fields input:checked")].map(i => i.value);
+      await store.put("sheets", sid, {...cur, titleCol: tcv, cardFields: cf});
+      render(); pushUndo("Card layout updated", snaps);
     }
   });
 }
@@ -1912,6 +1940,7 @@ function openColMenu(colId, anchor) {
       <button type="button" class="bbtn" data-cm="bold" aria-pressed="${!!sheetVP(S.sheetId).colfmt[c.id]?.bold}" title="Bold">B</button>
       <button type="button" class="bbtn" data-cm="wrap" aria-pressed="${sheetVP(S.sheetId).colfmt[c.id]?.wrap === "on"}" title="Wrap text">↵</button></div>
     <div class="cmfmt tints" data-l="Highlight">${Object.keys(TINTS).map(t => `<button type="button" class="tint" data-cm="tint" data-v="${t}" aria-pressed="${(sheetVP(S.sheetId).colfmt[c.id]?.color || "none") === t}" title="Highlight ${t}" style="--d:${TINT_DOT[t]}"></button>`).join("")}</div>
+    ${c.type !== "calc" ? `<button type="button" data-cm="titlecol">${S.sheets[S.sheetId].titleCol === c.id ? "H Stop using as card heading" : "H Use as card heading"}</button>` : ""}
     ${c.type === "text" || c.type === "select" ? `<button type="button" data-cm="statuscol">${S.sheets[S.sheetId].statusCol === c.id ? "◉ Status workflow…" : "◉ Set as status column"}</button>` : ""}
     ${c.type === "text" || c.type === "select" ? `<button type="button" data-cm="assignee">${S.sheets[S.sheetId].assigneeCol === c.id ? "@ Assignee settings…" : "@ Set as assignee column"}</button>` : ""}
     ${c.type === "long" || c.type === "text" ? `<button type="button" data-cm="remark">${S.sheets[S.sheetId].remarkCol === c.id ? "✎ Remark column settings…" : "✎ Set as remark column"}</button>` : ""}
@@ -1939,6 +1968,7 @@ function openColMenu(colId, anchor) {
       case "tint": { const cf = colFmt(S.sheetId, colId); b.dataset.v === "none" ? delete cf.color : cf.color = b.dataset.v; saveVP(); closeColMenu(); render(); break; }
       case "remark": closeColMenu(); openRemarkSettings(colId); break;
       case "assignee": closeColMenu(); openAssigneeSettings(colId); break;
+      case "titlecol": { closeColMenu(); const sid = S.sheetId, cur = S.sheets[sid], snaps = snap("sheets", [sid]), on = cur.titleCol !== colId; store.put("sheets", sid, {...cur, titleCol: on ? colId : null}).then(() => { render(); pushUndo(on ? `Cards now use “${c.label}” as heading` : "Card heading set to automatic", snaps); }); break; }
       case "statuscol": closeColMenu(); S.sheets[S.sheetId].statusCol === colId ? openWorkflow() : openStatusSettings(colId); break;
       case "hide": { const v = sheetVP(S.sheetId); if (!v.hidden.includes(colId)) v.hidden.push(colId); saveVP(); closeColMenu(); render(); toast(`“${c.label}” hidden. Use Format to show it again`); break; }
       case "width": { delete sheetVP(S.sheetId).widths[colId]; saveVP(); closeColMenu(); render(); break; }
@@ -3108,6 +3138,7 @@ document.addEventListener("click", e => {
     case "remarkset": openRemarkSettings(); break;
     case "assignset": openAssigneeSettings(); break;
     case "statusset": openStatusSettings(); break;
+    case "cardset": openCardSettings(); break;
     case "workflow": openWorkflow(); break;
     case "people": openPeople(); break;
     case "fmt": openFormat(); break;
