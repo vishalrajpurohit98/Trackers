@@ -537,6 +537,15 @@ td.rmk .clamp{padding-right:22px}
 .rmkadd .acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .rmkadd textarea{min-height:64px}
 .rmkpop #rmOut:empty{display:none}
+/* People & owners */
+.pplist{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px}
+.ppgrp{display:flex;flex-direction:column;gap:4px}
+.ppgrp>b{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.pprow{display:grid;grid-template-columns:minmax(0,1fr) 170px 32px;gap:8px;align-items:center;padding:2px 4px;border-radius:8px;font-size:14px}
+.pprow:hover{background:var(--surface-2)}
+.asgpick{display:flex;flex-direction:column;gap:10px;max-height:280px;overflow:auto}
+.asgpick .opt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.fchip .n{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-left:4px}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -881,6 +890,7 @@ function startSync() {
   store = { mode: "cloud",
     async put(kind, id, data) { S[kind][id] = data; bumpPending(1); const c = clean(data); if (kind === "rows" && ME) c.updatedBy = ME.email || ME.displayName || "Signed-in user"; try { await ref(`${kind}/${id}`).set(c); } catch (e) { toast("Couldn't save: " + (e.code === "PERMISSION_DENIED" ? "your account doesn't have write access" : e.message)); } finally { bumpPending(-1); } },
     async del(kind, id) { delete S[kind][id]; bumpPending(1); try { await ref(`${kind}/${id}`).remove(); } catch (e) { toast("Couldn't delete: " + e.message); } finally { bumpPending(-1); } } };
+  store = wrapStore(store);
   setSync("saving", "Loading your sheets…");
   let got = {trackers: false, sheets: false, rows: false}, online = true;
   const timer = setTimeout(() => { if (!got.sheets || !got.rows || !got.trackers) { setSync("offline", "Can't reach the database yet"); S.ready = true; render(); } }, 10000);
@@ -939,7 +949,7 @@ function renderNav() {
   $("#trkMark").textContent = ct ? (ct.short || shortOf(ct.name)) : "+";
   $("#trkMark").style.background = ct ? trackerColor(ct) : ""; $("#trkMark").style.color = ct ? "#fff" : "";
   $("#trkPop").innerHTML = trackerList().map(t => `<button type="button" data-trk="${esc(t.id)}"><span class="mini" style="background:${trackerColor(t)}">${esc(t.short || shortOf(t.name))}</span><span>${esc(t.name)}</span><span class="sub">${sheetList(t.id).length} sheets</span></button>`).join("") +
-    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
+    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="people">People & owners for ${esc(ct.name)} (${peopleOf(ct.id).people.length})…</button><button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
   $("#navHome").innerHTML = "";
   $("#nav").innerHTML = sheetList().map((s, i) => `<button type="button" data-sheet="${esc(s.id)}" aria-current="${S.view === "sheet" && S.sheetId === s.id}"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rowsOf(s.id).length}</span></button>`).join("");
 }
@@ -1255,7 +1265,7 @@ function renderSheet(main) {
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
       return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${rest.filter(x => x.type !== "select").slice(0, 3).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
     }).join("")}</div>`;
-  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
+  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${c.id === sh.assigneeCol ? ' <span class="fx" title="Assignee column">@</span>' : ""}${c.id === sh.ownerCol && sh.assigneeCol ? ' <span class="fx" title="Filled from assignee">auto</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
       <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"} ${c.id === sh.remarkCol ? "rmk" : ""}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : c.id === sh.remarkCol ? "Click to add an update" : "Click to edit"}">${c.id === sh.remarkCol && AI_ON && (r.cells || {})[c.id] ? `<button type="button" class="rmk-ai" data-rmksum title="AI summary">${ICON.spark}</button>` : ""}${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
 
   const noteHTML = S.noteEdit === sh.id
@@ -1277,7 +1287,7 @@ function renderSheet(main) {
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="assignset">Assignee & owner…</button><button type="button" data-act="people">People & owners…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -1467,6 +1477,90 @@ function openHolidays() {
   });
 }
 
+/* ---------- Assignee → Owner ---------- */
+const splitNames = v => String(v || "").split(/\s*(?:,|;|\/|&|\+|\band\b|\n)\s*/i).map(x => x.trim()).filter(Boolean);
+function peopleOf(trackerId) { const t = S.trackers[trackerId] || {}; const people = Array.isArray(t.people) ? t.people : Object.values(t.people || {}); const owners = Array.isArray(t.owners) ? t.owners : Object.values(t.owners || {}); return {people, owners: owners.length ? owners : ["Fable", (t.name || "Bank").replace(/\s*bank$/i, "") + " Bank"].filter((x, i, a) => a.indexOf(x) === i)}; }
+function ownerFor(trackerId, name) { const n = name.toLowerCase(); return peopleOf(trackerId).people.find(p => p.name.toLowerCase() === n)?.owner || ""; }
+function ownersFromAssignee(sh, val) { const tid0 = tid(sh); const o = []; splitNames(val).forEach(n => { const w = ownerFor(tid0, n); if (w && !o.includes(w)) o.push(w); }); return o; }
+function deriveOwner(d) {
+  const sh = S.sheets[d?.sheetId]; if (!sh || !sh.assigneeCol || !sh.ownerCol) return d;
+  const a = (d.cells || {})[sh.assigneeCol]; if (!a) return d;
+  const o = ownersFromAssignee(sh, a); if (!o.length) return d;
+  const val = o.join(", "); if ((d.cells || {})[sh.ownerCol] === val) return d;
+  return {...d, cells: {...(d.cells || {}), [sh.ownerCol]: val}};
+}
+function wrapStore(st) { if (!st || st.__wrapped) return st; const put = st.put.bind(st); st.put = (k, id, d) => put(k, id, k === "rows" ? deriveOwner(d) : d); st.__wrapped = true; return st; }
+async function saveTrackerPeople(trackerId, people, owners) {
+  const t = S.trackers[trackerId] || {name: curTracker()?.name || "Tracker", order: 0}; const sn = snap("trackers", [trackerId]);
+  await store.put("trackers", trackerId, {...t, people, owners}); return sn;
+}
+function openPeople() {
+  const t = curTracker(); if (!t) return;
+  let {people, owners} = peopleOf(t.id); people = clone(people); owners = [...owners];
+  const draw = root => {
+    root.querySelector("#pp_owners").innerHTML = owners.map((o, i) => `<span class="fchip"><button type="button" title="${people.filter(p => p.owner === o).length} people">${esc(o)} <span class="n">${people.filter(p => p.owner === o).length}</span></button><button type="button" class="x" data-odel="${i}" aria-label="Remove ${esc(o)}">✕</button></span>`).join("");
+    const osel = (v, attr) => `<select class="inp mini" ${attr}>${owners.map(o => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}${v && !owners.includes(v) ? `<option selected>${esc(v)}</option>` : ""}${!v ? `<option value="" selected>Choose owner…</option>` : ""}</select>`;
+    root.querySelector("#pp_list").innerHTML = people.length ? owners.concat(people.some(p => !owners.includes(p.owner)) ? [""] : []).map(o => { const ps = people.map((p, i) => [p, i]).filter(([p]) => o ? p.owner === o : !owners.includes(p.owner)); if (!ps.length) return ""; return `<div class="ppgrp"><b>${o ? esc(o) : "Needs an owner"}</b>${ps.map(([p, i]) => `<div class="pprow"><span>${esc(p.name)}</span>${osel(p.owner, `data-pown="${i}"`)}<button type="button" class="icon" data-pdel="${i}" aria-label="Remove ${esc(p.name)}">${ICON.trash}</button></div>`).join("")}</div>`; }).join("") : `<div class="hint" style="padding:10px">No people yet. Add them below, or click “Learn from sheets”.</div>`;
+    root.querySelector("#pp_newown").innerHTML = owners.map(o => `<option>${esc(o)}</option>`).join("");
+  };
+  openDialog({
+    eyebrow: t.name, title: "People & owners", saveLabel: "Save",
+    body: () => `<p class="hint" style="margin:0">Owners are the organisations (e.g. Fable, the bank, Mastercard). Each person belongs to one owner. When you pick assignees on a sheet, its Owner column fills in automatically.</p>
+      <div class="field"><span class="lbl">Owners</span><div class="fbar" id="pp_owners"></div><div class="row2" style="flex:none"><input class="inp" id="pp_newo" placeholder="Add an owner, e.g. Mastercard" style="flex:1"><button class="btn" type="button" id="pp_addo" style="flex:none">Add owner</button></div></div>
+      <div class="field"><span class="lbl">People</span><div id="pp_list" class="pplist"></div>
+        <div class="row2" style="flex:none"><input class="inp" id="pp_newn" placeholder="Name, e.g. Vishal (or several: Vishal, Rahul)" style="flex:2"><select class="inp" id="pp_newown" style="flex:1"></select><button class="btn primary" type="button" id="pp_addp" style="flex:none">Add</button></div>
+        <button class="btn ghost" type="button" id="pp_learn" style="align-self:flex-start">${ICON.spark} Learn from sheets</button><span class="hint" id="pp_msg"></span></div>`,
+    mount: root => {
+      draw(root);
+      root.querySelector("#pp_addo").onclick = () => { const v = root.querySelector("#pp_newo").value.trim(); if (v && !owners.includes(v)) owners.push(v); root.querySelector("#pp_newo").value = ""; draw(root); };
+      root.querySelector("#pp_newo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); root.querySelector("#pp_addo").click(); } });
+      const addP = () => { const names = splitNames(root.querySelector("#pp_newn").value), o = root.querySelector("#pp_newown").value; names.forEach(n => { const ex = people.find(p => p.name.toLowerCase() === n.toLowerCase()); if (ex) ex.owner = o; else people.push({name: n, owner: o}); }); root.querySelector("#pp_newn").value = ""; draw(root); root.querySelector("#pp_newn").focus(); };
+      root.querySelector("#pp_addp").onclick = addP;
+      root.querySelector("#pp_newn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addP(); } });
+      root.addEventListener("click", e => {
+        const od = e.target.closest("[data-odel]"); if (od) { const o = owners[+od.dataset.odel]; if (people.some(p => p.owner === o)) { toast(`Move or remove the people under ${o} first`); return; } owners.splice(+od.dataset.odel, 1); draw(root); }
+        const pd = e.target.closest("[data-pdel]"); if (pd) { people.splice(+pd.dataset.pdel, 1); draw(root); }
+      });
+      root.addEventListener("change", e => { const i = e.target.dataset.pown; if (i !== undefined) { people[+i].owner = e.target.value; draw(root); } });
+      root.querySelector("#pp_learn").onclick = () => {
+        let added = 0, unk = 0;
+        sheetList(t.id).forEach(sh => { if (!sh.assigneeCol) return; rowsOf(sh.id).forEach(r => { const names = splitNames((r.cells || {})[sh.assigneeCol]); const own = sh.ownerCol ? splitNames((r.cells || {})[sh.ownerCol]) : [];
+          names.forEach(n => { if (people.some(p => p.name.toLowerCase() === n.toLowerCase())) return; const o = names.length === 1 && own.length === 1 ? own[0] : ""; if (o && !owners.includes(o)) owners.push(o); people.push({name: n, owner: o}); o ? added++ : unk++; }); }); });
+        draw(root); root.querySelector("#pp_msg").textContent = added + unk ? `Found ${added + unk} names${unk ? `, ${unk} need an owner (see “Needs an owner”)` : ""}.` : "No new names found. Set the Assignee column on your sheets first.";
+      };
+    },
+    onSave: async () => { const sn = await saveTrackerPeople(t.id, people.filter(p => p.name), owners); render(); pushUndo("People & owners saved", sn); }
+  });
+}
+function openAssigneeSettings(colId) {
+  const sid = S.sheetId, sh = S.sheets[sid], cols = sh.columns || [];
+  const aCols = cols.filter(c => c.type === "text" || c.type === "select" || c.type === "long"), oCols = cols.filter(c => (c.type === "text" || c.type === "select") && c.id !== (colId || sh.assigneeCol));
+  const aDef = colId || sh.assigneeCol || (aCols.find(c => /assign|owner|resp|spoc|person/i.test(c.label)) || aCols[0])?.id;
+  const t = curTracker(), {people} = peopleOf(t.id);
+  openDialog({
+    eyebrow: sh.name, title: "Assignee & owner", saveLabel: "Save",
+    body: () => `<p class="hint" style="margin:0">Pick one or more assignees per entry; the Owner column fills in from <b>People & owners</b> (${people.length} people in ${esc(t.name)}). Mixed teams show both, e.g. “Fable, BCP Bank”.</p>
+      <div class="row2" style="flex:none;gap:12px">
+        <div class="field" style="flex:1"><label for="as_a">Assignee column</label><select class="inp" id="as_a"><option value="">None</option>${aCols.map(c => `<option value="${esc(c.id)}" ${c.id === aDef ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
+        <div class="field" style="flex:1"><label for="as_o">Owner column (filled automatically)</label><select class="inp" id="as_o"><option value="__new">+ Create a new “Owner” column</option>${oCols.map(c => `<option value="${esc(c.id)}" ${c.id === sh.ownerCol ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div></div>
+      <label class="ck"><input type="checkbox" id="as_fill" checked> Fill the Owner column for existing entries now</label>
+      <div class="row2" style="flex:none"><button class="btn" type="button" id="as_people" style="flex:none">Manage people & owners…</button></div>`,
+    mount: root => { root.querySelector("#as_people").onclick = () => { closeDialog(true); openPeople(); }; },
+    onSave: async root => {
+      const a = root.querySelector("#as_a").value; let o = root.querySelector("#as_o").value;
+      if (!a) { const sn = snap("sheets", [sid]); await store.put("sheets", sid, {...S.sheets[sid], assigneeCol: null, ownerCol: null}); render(); pushUndo("Assignee column cleared", sn); return; }
+      if (o === a) { toast("Owner and Assignee must be different columns"); return false; }
+      const snaps = snap("sheets", [sid]); let cur = S.sheets[sid];
+      if (o === "__new") { const {owners} = peopleOf(t.id); const nc = {id: uid("c"), label: "Owner", type: "select", options: owners}; const ncols = cur.columns.map(c => c.id === a && /^owners?$/i.test(c.label.trim()) ? {...c, label: "Assignee"} : c); ncols.splice(ncols.findIndex(c => c.id === a) + 1, 0, nc); o = nc.id; cur = {...cur, columns: ncols}; }
+      await store.put("sheets", sid, {...cur, assigneeCol: a, ownerCol: o});
+      let n = 0;
+      if (root.querySelector("#as_fill").checked) { const tasks = []; rowsOf(sid).forEach(r => { const d = deriveOwner({...S.rows[r.id]}); if ((d.cells || {})[o] !== ((S.rows[r.id].cells || {})[o])) { snaps.push(["rows", r.id, clone(S.rows[r.id])]); n++; tasks.push(() => store.put("rows", r.id, d)); } }); await pool(tasks); }
+      render(); pushUndo(`Assignee & owner set${n ? ` · ${n} owners filled` : ""}`, snaps);
+      if (!peopleOf(t.id).people.length) setTimeout(() => toast("Next: add your people under ⋯ → People & owners"), 2600);
+    }
+  });
+}
+
 /* ---------- Remark column ---------- */
 const RMK_DATES = {"dd-MMM-yyyy": "07-Nov-2026", "dd MMM yyyy": "07 Nov 2026", "dd-MMM-yy": "07-Nov-26", "dd/MM/yyyy": "07/11/2026", "dd-MM-yyyy": "07-11-2026", "yyyy-MM-dd": "2026-11-07", "MMM dd, yyyy": "Nov 07, 2026"};
 function rmkFmt(sh) { return {date: "dd-MMM-yyyy", tag: "Fable", pos: "top", ...(sh?.remarkFmt || {})}; }
@@ -1573,6 +1667,14 @@ function openCellPop(td) {
       <div class="row2"><input class="inp" id="cpNew" placeholder="Other value… press Enter"></div>${v ? `<div class="acts"><button type="button" class="stamp" data-cp="clear" style="color:var(--bad)">Clear value</button></div>` : ""}`;
   } else if (c.type === "date") {
     m.innerHTML = title + `<input class="inp" type="date" id="cpIn" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "")}">` + acts(`<button type="button" class="stamp" data-cp="today">Today</button>${v ? `<button type="button" class="stamp" data-cp="clear" style="color:var(--bad)">Clear</button>` : ""}`);
+  } else if (sh.assigneeCol === c.id) {
+    m.className = "cellpop wide";
+    const T = tid(sh), {people, owners} = peopleOf(T), cur = splitNames(v), curL = cur.map(x => x.toLowerCase());
+    const unknown = cur.filter(n => !people.some(p => p.name.toLowerCase() === n.toLowerCase()));
+    const grp = (o, list) => list.length ? `<div class="ppgrp"><b>${esc(o)}</b><div class="opts">${list.map(n => `<button type="button" class="opt" data-asg="${esc(n)}" aria-pressed="${curL.includes(n.toLowerCase())}">${esc(n)}</button>`).join("")}</div></div>` : "";
+    m.innerHTML = title + `<div class="asgpick">${owners.map(o => grp(o, people.filter(p => p.owner === o).map(p => p.name))).join("")}${grp("Not in the people list", [...unknown, ...people.filter(p => !owners.includes(p.owner)).map(p => p.name)])}${!people.length ? `<div class="hint">No people yet. Add one below, or set them up in ⋯ → People & owners.</div>` : ""}</div>
+      <div class="row2" style="flex:none"><input class="inp" id="asNew" placeholder="Add a person" style="flex:2"><select class="inp" id="asOwn" style="flex:1">${owners.map(o => `<option>${esc(o)}</option>`).join("")}</select><button class="btn" type="button" data-cp="asadd" style="flex:none">Add</button></div>
+      <div class="banner" id="asPrev"></div>` + acts(`<button type="button" class="stamp" data-cp="people">People & owners…</button>`);
   } else if (isRemark(sh, c)) {
     m.className = "cellpop wide rmkpop";
     m.innerHTML = title + `<div class="rmkadd"><label class="hint" for="rmNew">New update · will be added as <b>${esc(remarkStamp(sh))}</b></label>
@@ -1595,6 +1697,7 @@ function openCellPop(td) {
     m.style.top = top + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px";
   };
   CP.place();
+  if (m.querySelector(".asgpick")) { const upd = () => { const sel = [...m.querySelectorAll("[data-asg][aria-pressed=true]")].map(x => x.dataset.asg); const o = ownersFromAssignee(sh, sel.join(", ")); m.querySelector("#asPrev").innerHTML = sel.length ? `Assignee: <b>${esc(sel.join(", "))}</b> · Owner: <b>${esc(o.join(", ") || "not set (add these people under an owner)")}</b>` : "No one assigned"; }; m.addEventListener("asgchange", upd); upd(); m.querySelector("#asNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); m.querySelector('[data-cp="asadd"]').click(); } }); }
   const inp = m.querySelector("#rmNew") || (m.querySelector("#rmFull") ? null : m.querySelector("#cpIn")) || (isTouch() ? null : m.querySelector("#cpNew"));
   inp?.focus({preventScroll: true});
   if (inp && inp.tagName === "TEXTAREA") { inp.setSelectionRange(0, 0); }
@@ -1610,10 +1713,14 @@ function openCellPop(td) {
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.pick !== undefined) return saveCell(rowId, colId, (r.cells || {})[colId] === b.dataset.pick ? "" : b.dataset.pick);
     const a = b.dataset.cp, f = m.querySelector("#cpIn");
+    if (b.dataset.asg !== undefined) { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); m.dispatchEvent(new Event("asgchange")); return; }
     if (a === "cancel") closeCellPop();
+    else if (a === "save" && m.querySelector(".asgpick")) saveCell(rowId, colId, [...m.querySelectorAll("[data-asg][aria-pressed=true]")].map(x => x.dataset.asg).join(", "));
     else if (a === "save") saveCell(rowId, colId, f ? f.value : "");
     else if (a === "clear") saveCell(rowId, colId, "");
     else if (a === "today") saveCell(rowId, colId, todayISO());
+    else if (a === "people") { closeCellPop(); openPeople(); }
+    else if (a === "asadd") { const nm = splitNames(m.querySelector("#asNew").value), o = m.querySelector("#asOwn").value; if (!nm.length) return; const {people, owners} = peopleOf(tid(sh)); const pp = clone(people); nm.forEach(n => { const ex = pp.find(p => p.name.toLowerCase() === n.toLowerCase()); if (ex) ex.owner = o; else pp.push({name: n, owner: o}); }); saveTrackerPeople(tid(sh), pp, owners).then(() => { const sel = [...m.querySelectorAll("[data-asg][aria-pressed=true]")].map(x => x.dataset.asg).concat(nm); const tdd = td; closeCellPop(); openCellPop(tdd); const mm = $("#cellPop"); mm.querySelectorAll("[data-asg]").forEach(x => x.setAttribute("aria-pressed", sel.map(s => s.toLowerCase()).includes(x.dataset.asg.toLowerCase()))); mm.dispatchEvent(new Event("asgchange")); }); }
     else if (a === "rmadd") { const t = m.querySelector("#rmNew").value.trim(); if (!t) { m.querySelector("#rmNew").focus(); toast("Type the update first"); return; } saveCell(rowId, colId, addRemark(sh, (r.cells || {})[colId], t)); }
     else if (a === "rmfull") { m.querySelector("#rmFull").hidden = false; b.hidden = true; m.querySelector("#cpIn").focus(); CP.place?.(); }
     else if (a === "rephrase" || a === "improve") {
@@ -1676,6 +1783,7 @@ function openColMenu(colId, anchor) {
       <button type="button" class="bbtn" data-cm="bold" aria-pressed="${!!sheetVP(S.sheetId).colfmt[c.id]?.bold}" title="Bold">B</button>
       <button type="button" class="bbtn" data-cm="wrap" aria-pressed="${sheetVP(S.sheetId).colfmt[c.id]?.wrap === "on"}" title="Wrap text">↵</button></div>
     <div class="cmfmt tints" data-l="Highlight">${Object.keys(TINTS).map(t => `<button type="button" class="tint" data-cm="tint" data-v="${t}" aria-pressed="${(sheetVP(S.sheetId).colfmt[c.id]?.color || "none") === t}" title="Highlight ${t}" style="--d:${TINT_DOT[t]}"></button>`).join("")}</div>
+    ${c.type === "text" || c.type === "select" ? `<button type="button" data-cm="assignee">${S.sheets[S.sheetId].assigneeCol === c.id ? "@ Assignee settings…" : "@ Set as assignee column"}</button>` : ""}
     ${c.type === "long" || c.type === "text" ? `<button type="button" data-cm="remark">${S.sheets[S.sheetId].remarkCol === c.id ? "✎ Remark column settings…" : "✎ Set as remark column"}</button>` : ""}
     <button type="button" data-cm="hide">⊘ Hide column</button><button type="button" data-cm="width">↔ Reset width</button>
     <hr><button type="button" class="red" data-cm="delete">${ICON.trash} Delete column</button>`;
@@ -1700,6 +1808,7 @@ function openColMenu(colId, anchor) {
       case "wrap": { const cf = colFmt(S.sheetId, colId); cf.wrap === "on" ? delete cf.wrap : cf.wrap = "on"; saveVP(); closeColMenu(); render(); break; }
       case "tint": { const cf = colFmt(S.sheetId, colId); b.dataset.v === "none" ? delete cf.color : cf.color = b.dataset.v; saveVP(); closeColMenu(); render(); break; }
       case "remark": closeColMenu(); openRemarkSettings(colId); break;
+      case "assignee": closeColMenu(); openAssigneeSettings(colId); break;
       case "hide": { const v = sheetVP(S.sheetId); if (!v.hidden.includes(colId)) v.hidden.push(colId); saveVP(); closeColMenu(); render(); toast(`“${c.label}” hidden. Use Format to show it again`); break; }
       case "width": { delete sheetVP(S.sheetId).widths[colId]; saveVP(); closeColMenu(); render(); break; }
       case "left": case "right": { const k = b.dataset.cm === "left" ? j - 1 : j + 1; [cs[j], cs[k]] = [cs[k], cs[j]]; save(cs, "Column moved"); break; }
@@ -1739,6 +1848,8 @@ function openDrawer(sheetId, rowId, preset) {
       const opts = [...new Set([...(c.options || []), ...(v ? [v] : [])])];
       ctl = `<div class="opts" role="group" aria-labelledby="l_${esc(c.id)}" data-sel="${esc(c.id)}">${opts.map(o => `<button type="button" class="opt ${v === o ? "t-" + tone(o) : ""}" aria-pressed="${v === o}" data-v="${esc(o)}" title="${esc(o)}">${esc(o)}</button>`).join("")}<button type="button" class="opt addopt" data-addopt="${esc(c.id)}">+ Other…</button></div><input class="inp" id="${id}" data-newopt="${esc(c.id)}" placeholder="Type a new option and press Enter" hidden>`;
     } else ctl = `<input class="inp" id="${id}" data-col="${esc(c.id)}" value="${esc(v)}">`;
+    if (sh.assigneeCol === c.id) { const {people} = peopleOf(tid(sh)); ctl = `<input class="inp" id="${id}" data-col="${esc(c.id)}" value="${esc(v)}" list="dl_people" placeholder="Names, separated by commas"><datalist id="dl_people">${people.map(p => `<option value="${esc(p.name)}">${esc(p.owner)}</option>`).join("")}</datalist><span class="hint" data-ownprev="${esc(c.id)}">Owner fills automatically: ${esc(ownersFromAssignee(sh, v).join(", ") || "—")}</span>`; }
+    if (sh.ownerCol === c.id && sh.assigneeCol) ctl = `<div class="calcbox"><span data-ownval>${esc(v || "—")}</span><small>From the assignee, using People & owners</small></div>`;
     const rmk = isRemark(sh, c);
     const stamp = rmk && AI_ON ? `<span><button type="button" class="stamp" data-aisum="${esc(c.id)}" title="AI summary of this field">${ICON.spark} Summarise</button></span>` : "";
     if (rmk) ctl = `<div class="rmkadd"><textarea class="inp" id="dr_rm_${esc(c.id)}" rows="2" placeholder="New update · added as ${esc(remarkStamp(sh))}"></textarea><div class="acts">${AI_ON ? `<button type="button" class="stamp" data-airw="rephrase" data-col="${esc(c.id)}">${ICON.spark} Rephrase</button><button type="button" class="stamp" data-airw="improve" data-col="${esc(c.id)}">${ICON.spark} Improve</button>` : ""}<span class="sp" style="flex:1"></span><button type="button" class="btn" data-rmadd="${esc(c.id)}">Add update</button></div></div>` + ctl;
@@ -1790,7 +1901,8 @@ async function saveDrawer(next) {
 
 $("#drForm").addEventListener("input", e => {
   const t = e.target; if (!D) return;
-  if (t.dataset.col) { D.cells[t.dataset.col] = t.value; if (t.tagName === "TEXTAREA") autogrow(t); updateProgress(); }
+  if (t.dataset.col) { D.cells[t.dataset.col] = t.value; if (t.tagName === "TEXTAREA") autogrow(t); updateProgress();
+    const shh = S.sheets[D.sheetId]; if (shh?.assigneeCol === t.dataset.col) { const o = ownersFromAssignee(shh, t.value).join(", "); const pv = document.querySelector(`[data-ownprev="${CSS.escape(t.dataset.col)}"]`); if (pv) pv.textContent = "Owner fills automatically: " + (o || "—"); const ov = document.querySelector("[data-ownval]"); if (ov && o) ov.textContent = o; } }
 });
 $("#drForm").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || !D) return;
@@ -2863,6 +2975,8 @@ document.addEventListener("click", e => {
     case "gsave": saveGrid(); break;
     case "ai": openAI(); break;
     case "remarkset": openRemarkSettings(); break;
+    case "assignset": openAssigneeSettings(); break;
+    case "people": openPeople(); break;
     case "fmt": openFormat(); break;
     case "addrow": addRowInline(); break;
     case "addcolq": openQuickCol(b); break;
