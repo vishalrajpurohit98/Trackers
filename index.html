@@ -454,6 +454,54 @@ tr.addrow button:hover,tr.addrow button:focus-visible{background:var(--accent-so
 tr.addrow button.hidnote{color:var(--muted);font-weight:600;left:auto}
 .colmenu .opts .opt{padding:5px 10px;font-size:12.5px}
 .colmenu .opts .opt[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+/* Format: alignment, wrap, highlight, etc. */
+.tablewrap td.ctint{background-image:linear-gradient(var(--colbg),var(--colbg))}
+.tablewrap td.al-center{text-align:center} .tablewrap td.al-right{text-align:right}
+.tablewrap td.wrap-on .clamp{display:block;-webkit-line-clamp:unset;overflow:visible;white-space:pre-line}
+.tablewrap td.wrap-off .clamp{display:block;-webkit-line-clamp:unset;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tablewrap td.wrap-off{max-width:var(--maxw,260px)}
+.tablewrap[data-valign="middle"] td{vertical-align:middle} .tablewrap[data-valign="bottom"] td{vertical-align:bottom}
+.tablewrap[data-hcase="normal"] th{text-transform:none;letter-spacing:0;font-size:12.5px}
+.tablewrap[data-pad="tight"] td{padding:5px 9px} .tablewrap[data-pad="tight"] th button{padding:7px 9px}
+.tablewrap[data-pad="roomy"] td{padding:16px 18px} .tablewrap[data-pad="roomy"] th button{padding:14px 18px}
+.tablewrap[data-border="strong"] td,.tablewrap[data-border="strong"] th{border-color:var(--muted)}
+.tablewrap[data-border="accent"] td,.tablewrap[data-border="accent"] th{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.tablewrap[data-pill="text"] td .pill{background:none!important;padding:0}
+.tablewrap[data-pill="text"] td .pill::before{display:none}
+.tablewrap[data-pill="dot"] td .pill{background:none!important;padding:0;color:var(--ink)}
+.tablewrap[data-pill="dot"] td .pill.t-good::before{background:var(--good)} .tablewrap[data-pill="dot"] td .pill.t-warn::before{background:var(--warn)} .tablewrap[data-pill="dot"] td .pill.t-bad::before{background:var(--bad)} .tablewrap[data-pill="dot"] td .pill.t-info::before{background:var(--info)} .tablewrap[data-pill="dot"] td .pill.t-neu::before{background:var(--neu)}
+.tablewrap[data-pill="dot"] td .pill::before{width:9px;height:9px}
+.tablewrap[data-boldfirst="1"] td:nth-child(2){font-weight:700}
+.tablewrap[data-hover="0"] tbody tr:not(.imp):not(.breach):not(.sel):hover td{background:var(--surface)}
+.tablewrap th button.colh{justify-content:inherit}
+.tablewrap th[style*="text-align:center"] button.colh{justify-content:center} .tablewrap th[style*="text-align:right"] button.colh{justify-content:flex-end}
+.cfmt{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow-x:auto}
+.cfh,.cfr{display:grid;grid-template-columns:minmax(96px,1fr) 34px 124px 92px 32px 146px 66px;gap:6px;align-items:center;padding:6px 10px;min-width:640px}
+.cfr .tints{gap:3px} .cfr .tint{width:18px;height:18px}
+.cfr .seg.mini button{padding:4px 6px}
+.cfh{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
+.cfr{border-bottom:1px solid var(--line);font-size:13.5px}
+.cfr:last-child{border-bottom:0}
+.cfr .cn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.cfr input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent)}
+.seg.mini{padding:2px;border-radius:8px}
+.seg.mini button{padding:4px 8px;font-size:12px;border-radius:6px}
+.inp.mini{padding:5px 8px;font-size:12.5px;border-radius:8px}
+.bbtn{all:unset;cursor:pointer;width:30px;height:28px;display:grid;place-items:center;border-radius:7px;border:1.5px solid var(--line);font-weight:800;font-size:13px}
+.bbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bbtn:focus-visible,.tint:focus-visible{outline:2px solid var(--accent)}
+.tints{display:flex;gap:4px;align-items:center}
+.tint{all:unset;cursor:pointer;width:20px;height:20px;border-radius:6px;background:var(--d);border:1.5px solid var(--line);box-sizing:border-box}
+.tint[data-cfv=""],.tint[data-v="none"]{background:linear-gradient(135deg,transparent 45%,var(--bad) 45%,var(--bad) 55%,transparent 55%),var(--surface)}
+.tint[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.colmenu .cmfmt{display:flex;gap:6px;align-items:center;padding:4px 8px}
+.colmenu .cmfmt button{padding:4px 8px}
+.colmenu .cmfmt .tint{width:22px;height:22px;padding:0;border-radius:6px;background:var(--d);border:1.5px solid var(--line);box-sizing:border-box}
+.colmenu .cmfmt .tint[data-v="none"]{background:linear-gradient(135deg,transparent 45%,var(--bad) 45%,var(--bad) 55%,transparent 55%),var(--surface)}
+.colmenu .cmfmt .tint:hover{background:var(--d);transform:scale(1.1)}
+.colmenu .cmfmt .bbtn{width:32px;height:30px;padding:0;justify-content:center;border:1.5px solid var(--line);font-weight:800;border-radius:7px}
+.colmenu .cmfmt .bbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.colmenu .cmfmt::before{content:attr(data-l);font-size:11px;color:var(--muted);width:58px;flex:none}
 /* Sign-in / setup gate */
 .gate{position:fixed;inset:0;z-index:90;background:var(--side);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .gate[hidden]{display:none!important}
@@ -497,7 +545,7 @@ th[draggable="true"] button{cursor:grab}
 /* ---------- Tablet & phone ---------- */
 .sidescrim{display:none}
 .crumb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (hover:none){.flag.open{opacity:1} .kbd{display:none} .side-foot>span:last-child{display:none}}
+@media (hover:none){.inp,select.inp,textarea.inp{font-size:16px} .flag.open{opacity:1} .kbd{display:none} .side-foot>span:last-child{display:none}}
 @media (max-width:1024px){
   .app,.app.noside,.app.full{grid-template-columns:minmax(0,1fr)}
   .side,.app.noside .side,.app.full .side{display:flex;position:fixed;top:0;left:0;bottom:0;height:100%;width:min(300px,86vw);z-index:48;transform:translateX(-105%);transition:transform .25s cubic-bezier(.2,.8,.2,1);box-shadow:20px 0 60px rgba(0,0,0,.25);padding-top:calc(22px + env(safe-area-inset-top,0px));padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
@@ -523,10 +571,12 @@ th[draggable="true"] button{cursor:grab}
   .alert .btn{flex:1 1 auto;justify-content:center}
   .tiles,.cards{grid-template-columns:minmax(0,1fr)}
   .tab{padding:8px 11px;font-size:13.5px}
-  .modal{padding:0;place-items:end stretch}
+  .modal{padding:0 0 var(--kb,0px);place-items:end stretch}
+  .drawer{bottom:var(--kb,0px);height:auto}
+  .cellpop .inp,.colmenu .inp,.drawer .inp,.mbox .inp{font-size:16px}
   .mbox{width:100%;max-height:92vh;border-radius:20px 20px 0 0}
   .mbox .dr-foot{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
-  .cellpop,.colmenu{left:0!important;right:0;top:auto!important;bottom:0;width:100%!important;border-radius:20px 20px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));max-height:80vh;overflow:auto}
+  .cellpop,.colmenu{left:0!important;right:0;top:auto!important;bottom:var(--kb,0px);width:100%!important;border-radius:20px 20px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));max-height:80vh;overflow:auto}
   .cellpop .opt,.cellpop .btn{padding:10px 14px}
   .dr-head,.dr-body,.dr-foot{padding-left:18px;padding-right:18px}
   .dr-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -536,6 +586,7 @@ th[draggable="true"] button{cursor:grab}
   .toast{left:16px;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateY(20px);justify-content:center;font-size:13.5px}
   .toolbar [data-act="add"]{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;border-radius:99px;padding:14px 20px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:15px}
   body:has(.drawer.open) .toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+  body:has(#cellPop) .toast,body:has(#colMenu) .toast,body:has(.modal:not([hidden])) .toast{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}
   body:has(.bulkbar) .toolbar [data-act="add"],body:has(.drawer.open) .toolbar [data-act="add"]{display:none}
   .toast.show{transform:none}
   .bulkbar{left:12px;right:12px;transform:none;border-radius:14px;justify-content:center}
@@ -1017,7 +1068,7 @@ function calcDesc(sh, c) {
 /* raw value of any column for search / sort / filter / export */
 function valOf(sh, c, r) { if (c.type === "calc") return calcCell(sh, c, r); const v = (r.cells || {})[c.id] ?? ""; return {n: c.type === "number" ? (parseFloat(v) || (v === "" ? null : 0)) : null, text: v}; }
 function cellOut(sh, c, r, st) {
-  if (c.type === "date" && st && st.breach && st.etaCols.has(c.id)) { const v = (r.cells || {})[c.id]; return `<span class="eta-late">${esc(fmtDate(v))}<small>ETA crossed</small></span>`; }
+  if (c.type === "date" && st && st.breach && st.etaCols.has(c.id)) { const v = (r.cells || {})[c.id]; return `<span class="eta-late">${esc(fmtDateV(v))}<small>ETA crossed</small></span>`; }
   if (c.type === "calc") { const x = calcCell(sh, c, r); if (!x.text) return `<span class="empty-cell">—</span>`; return x.t === "plain" ? esc(x.text) : `<span class="pill t-${x.t}">${esc(x.text)}</span>`; }
   return cellHTML(c, (r.cells || {})[c.id]);
 }
@@ -1131,14 +1182,20 @@ function openFilter(idx, presetCol) {
 function cellHTML(c, v) {
   if (v == null || v === "") return `<span class="empty-cell">—</span>`;
   if (c.type === "select") return `<span class="pill t-${tone(v)}" title="${esc(v)}">${esc(v)}</span>`;
-  if (c.type === "date") return esc(fmtDate(v));
+  if (c.type === "date") return esc(fmtDateV(v));
   if (c.type === "long") return `<div class="clamp">${esc(v)}</div>`;
   return `<div class="clamp">${esc(v)}</div>`;
 }
 function renderSheet(main) {
   const sh = {id: S.sheetId, ...S.sheets[S.sheetId]}, cols = sh.columns || [];
   const vp = sheetVP(sh.id), vcols = cols.filter(c => !vp.hidden.includes(c.id)), F = VP.fmt;
-  const wst = c => vp.widths[c.id] ? ` style="width:${vp.widths[c.id]}px;min-width:${vp.widths[c.id]}px;max-width:${vp.widths[c.id]}px"` : "";
+  const wst = (c, head) => { const w = vp.widths[c.id], cf = vp.colfmt[c.id] || {}, st = [];
+    if (w) st.push(`width:${w}px;min-width:${w}px;max-width:${w}px`);
+    const al = cf.align || (head ? F.halign : F.align); if (al && al !== "left") st.push(`text-align:${al}`);
+    if (!head && cf.bold) st.push("font-weight:700");
+    if (!head && cf.color && TINTS[cf.color]) st.push(`--colbg:${TINTS[cf.color]}`);
+    return st.length ? ` style="${st.join(";")}"` : ""; };
+  const ccls = c => { const cf = vp.colfmt[c.id] || {}; return `${cf.wrap ? "wrap-" + cf.wrap : ""} ${cf.color && TINTS[cf.color] ? "ctint" : ""} al-${cf.align || F.align}`; };
   const all = rowsOf(sh.id), rows = filteredRows(sh);
   const layout = (S.layout[sh.id] === "grid" ? "table" : S.layout[sh.id]) || (matchMedia("(max-width:640px)").matches || (cols.length <= 5 && cols.some(c => c.type === "long")) ? "cards" : "table");
   const flist = S.filters[sh.id] || [], fActive = flist.length > 0 || !!S.onlyRed[sh.id];
@@ -1155,8 +1212,8 @@ function renderSheet(main) {
       const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
       return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${rest.filter(x => x.type !== "select").slice(0, 3).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
     }).join("")}</div>`;
-  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
-      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${c.type === "calc" ? "" : "editable"}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : "Click to edit"}">${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
+  else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
+      <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : "Click to edit"}">${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
 
   const noteHTML = S.noteEdit === sh.id
     ? `<div class="note-edit"><textarea class="inp" id="noteTa" rows="3" placeholder="Add context for this sheet: scope, a reminder, a dependency…">${esc(sh.note || "")}</textarea><div class="acts"><button class="btn primary" type="button" data-act="notesave">Save note</button><button class="btn ghost" type="button" data-act="notecancel">Cancel</button>${sh.note ? `<span class="sp" style="flex:1"></span><button class="btn ghost" type="button" data-act="noteclear" style="color:var(--bad)">Remove note</button>` : ""}</div></div>`
@@ -1435,13 +1492,14 @@ function openCellPop(td) {
   }
   document.body.appendChild(m);
   CP.place = () => {
+    if (sheetMode()) return;
     const rc = td.getBoundingClientRect();
     if (!td.isConnected || rc.bottom < 0 || rc.top > innerHeight) { closeCellPop(); return; }
     let top = rc.bottom + 4; if (top + m.offsetHeight > innerHeight - 8) top = Math.max(8, rc.top - m.offsetHeight - 4);
     m.style.top = top + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px";
   };
   CP.place();
-  const inp = m.querySelector("#cpIn") || m.querySelector("#cpNew");
+  const inp = m.querySelector("#cpIn") || (isTouch() ? null : m.querySelector("#cpNew"));
   inp?.focus({preventScroll: true});
   if (inp && inp.tagName === "TEXTAREA") { inp.setSelectionRange(0, 0); }
   else if (inp && inp.type !== "date") inp.select?.();
@@ -1463,7 +1521,11 @@ function openCellPop(td) {
   });
 }
 document.addEventListener("mousedown", e => { if (CP && !e.target.closest("#cellPop") && !e.target.closest("td.editing")) closeCellPop(); });
-window.addEventListener("resize", closeCellPop);
+const sheetMode = () => matchMedia("(max-width:760px)").matches;
+const isTouch = () => matchMedia("(hover:none)").matches;
+window.addEventListener("resize", () => { if (CP && !sheetMode()) CP.place?.(); });
+/* keep bottom sheets and the entry form above the on-screen keyboard */
+if (window.visualViewport) { const vv = window.visualViewport; const upd = () => document.documentElement.style.setProperty("--kb", Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop)) + "px"); vv.addEventListener("resize", upd); vv.addEventListener("scroll", upd); upd(); }
 document.addEventListener("scroll", e => { if (CP && !e.target.closest?.("#cellPop")) CP.place?.(); }, true);
 
 /* ---------- Column header menu ---------- */
@@ -1481,6 +1543,10 @@ function openColMenu(colId, anchor) {
     ${c.type === "date" ? `<button type="button" data-cm="aging">⏱ Add aging from this date</button>` : ""}
     ${c.type === "calc" || c.type === "select" ? `<button type="button" data-cm="edit">✎ Edit ${c.type === "calc" ? "calculation" : "dropdown options"}</button>` : ""}
     <hr><button type="button" data-cm="left" ${i === 0 ? "disabled style='opacity:.4'" : ""}>← Move left</button><button type="button" data-cm="right" ${i === cols.length - 1 ? "disabled style='opacity:.4'" : ""}>→ Move right</button>
+    <div class="cmfmt" data-l="Format"><span class="seg mini">${["left", "center", "right"].map(a => `<button type="button" data-cm="al" data-v="${a}" aria-pressed="${(sheetVP(S.sheetId).colfmt[c.id]?.align || VP.fmt.align) === a}" title="Align ${a}">${({left: "⟸", center: "≡", right: "⟹"})[a]}</button>`).join("")}</span>
+      <button type="button" class="bbtn" data-cm="bold" aria-pressed="${!!sheetVP(S.sheetId).colfmt[c.id]?.bold}" title="Bold">B</button>
+      <button type="button" class="bbtn" data-cm="wrap" aria-pressed="${sheetVP(S.sheetId).colfmt[c.id]?.wrap === "on"}" title="Wrap text">↵</button></div>
+    <div class="cmfmt tints" data-l="Highlight">${Object.keys(TINTS).map(t => `<button type="button" class="tint" data-cm="tint" data-v="${t}" aria-pressed="${(sheetVP(S.sheetId).colfmt[c.id]?.color || "none") === t}" title="Highlight ${t}" style="--d:${TINT_DOT[t]}"></button>`).join("")}</div>
     <button type="button" data-cm="hide">⊘ Hide column</button><button type="button" data-cm="width">↔ Reset width</button>
     <hr><button type="button" class="red" data-cm="delete">${ICON.trash} Delete column</button>`;
   document.body.appendChild(m);
@@ -1499,6 +1565,10 @@ function openColMenu(colId, anchor) {
       case "filter": closeColMenu(); openFilter(null, colId); break;
       case "aging": closeColMenu(); openAddColumn("aging", colId); break;
       case "edit": closeColMenu(); openModal(S.sheetId); break;
+      case "al": { colFmt(S.sheetId, colId).align = b.dataset.v; saveVP(); closeColMenu(); render(); break; }
+      case "bold": { const cf = colFmt(S.sheetId, colId); cf.bold ? delete cf.bold : cf.bold = true; saveVP(); closeColMenu(); render(); break; }
+      case "wrap": { const cf = colFmt(S.sheetId, colId); cf.wrap === "on" ? delete cf.wrap : cf.wrap = "on"; saveVP(); closeColMenu(); render(); break; }
+      case "tint": { const cf = colFmt(S.sheetId, colId); b.dataset.v === "none" ? delete cf.color : cf.color = b.dataset.v; saveVP(); closeColMenu(); render(); break; }
       case "hide": { const v = sheetVP(S.sheetId); if (!v.hidden.includes(colId)) v.hidden.push(colId); saveVP(); closeColMenu(); render(); toast(`“${c.label}” hidden. Use Format to show it again`); break; }
       case "width": { delete sheetVP(S.sheetId).widths[colId]; saveVP(); closeColMenu(); render(); break; }
       case "left": case "right": { const k = b.dataset.cm === "left" ? j - 1 : j + 1; [cs[j], cs[k]] = [cs[k], cs[j]]; save(cs, "Column moved"); break; }
@@ -1507,8 +1577,8 @@ function openColMenu(colId, anchor) {
   });
 }
 document.addEventListener("mousedown", e => { if (CM && !e.target.closest("#colMenu") && !e.target.closest("[data-colmenu]")) closeColMenu(); });
-window.addEventListener("resize", closeColMenu);
-document.addEventListener("scroll", e => { if (CM && Date.now() - (CM.t || 0) > 400 && !e.target.closest?.("#colMenu")) closeColMenu(); }, true);
+let lastW = innerWidth; window.addEventListener("resize", () => { if (innerWidth !== lastW) { lastW = innerWidth; closeColMenu(); } });
+document.addEventListener("scroll", e => { if (CM && !sheetMode() && Date.now() - (CM.t || 0) > 400 && !e.target.closest?.("#colMenu")) closeColMenu(); }, true);
 
 /* ---------- Drawer (entry form) ---------- */
 let D = null; // {sheetId, rowId, cells}
@@ -1544,7 +1614,7 @@ function openDrawer(sheetId, rowId, preset) {
   f.querySelectorAll("textarea").forEach(autogrow);
   updateProgress();
   $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); $("#scrim").classList.add("open");
-  setTimeout(() => { const first = f.querySelector(rowId ? "textarea, input:not([hidden])" : "input:not([hidden]):not([type=number]), textarea"); first?.focus(); }, 120);
+  if (!isTouch()) setTimeout(() => { const first = f.querySelector(rowId ? "textarea, input:not([hidden])" : "input:not([hidden]):not([type=number]), textarea"); first?.focus(); }, 120);
 }
 function autogrow(t) { t.style.height = "auto"; t.style.height = Math.min(420, t.scrollHeight + 4) + "px"; }
 function updateProgress() {
@@ -1966,11 +2036,19 @@ const gridHasFocus = () => !!document.activeElement?.classList?.contains("gc");
 window.addEventListener("beforeunload", e => { if (Object.keys(S.gedits).some(sid => gridDirtyCount(sid))) { e.preventDefault(); e.returnValue = ""; } });
 
 /* ---------- Table view preferences (per browser) ---------- */
-const VP_DEF = {grid: "rows", stripe: false, head: "light", size: "m", rowh: 44, lines: "3", freeze: false};
+const VP_DEF = {grid: "rows", stripe: false, head: "light", size: "m", rowh: 44, lines: "3", freeze: false, align: "left", valign: "top", hcase: "upper", halign: "left", pad: "normal", datefmt: "dmy", pill: "pill", boldFirst: false, hover: true, border: "soft"};
+const TINTS = {none: "", yellow: "rgba(255,213,74,.22)", green: "rgba(46,170,110,.16)", blue: "rgba(60,120,230,.14)", red: "rgba(220,70,60,.14)", purple: "rgba(140,90,210,.15)", grey: "rgba(120,130,128,.14)"};
+const TINT_DOT = {none: "transparent", yellow: "#F2C230", green: "#2EAA6E", blue: "#3C78E6", red: "#DC463C", purple: "#8C5AD2", grey: "#8A9592"};
+function fmtDateV(v) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); if (!m) return v || "";
+  const f = VP.fmt.datefmt;
+  return f === "dash" ? `${m[3]}-${m[2]}-${m[1]}` : f === "iso" ? `${m[1]}-${m[2]}-${m[3]}` : f === "short" ? `${m[3]}-${MON[+m[2] - 1]}-${m[1].slice(2)}` : f === "us" ? `${MON[+m[2] - 1]} ${+m[3]}, ${m[1]}` : fmtDate(v);
+}
+function colFmt(sid, cid) { const v = sheetVP(sid); v.colfmt = v.colfmt || {}; return v.colfmt[cid] = v.colfmt[cid] || {}; }
 let VP = {fmt: {...VP_DEF}, sheets: {}};
 try { const v = JSON.parse(localStorage.getItem("bcp-view") || "null"); if (v) VP = {fmt: {...VP_DEF, ...(v.fmt || {})}, sheets: v.sheets || {}}; } catch (e) {}
 const saveVP = () => { try { localStorage.setItem("bcp-view", JSON.stringify(VP)); } catch (e) {} };
-function sheetVP(sid) { const v = VP.sheets[sid] = VP.sheets[sid] || {}; v.hidden = v.hidden || []; v.widths = v.widths || {}; return v; }
+function sheetVP(sid) { const v = VP.sheets[sid] = VP.sheets[sid] || {}; v.hidden = v.hidden || []; v.widths = v.widths || {}; v.colfmt = v.colfmt || {}; return v; }
 function openFormat() {
   const sid = S.sheetId, sh = S.sheets[sid], cols = sh.columns || [], before = JSON.stringify(VP);
   const ch = (id, val, opts) => `<div class="choices" id="${id}">${opts.map(([v, b, d]) => `<button type="button" class="choice" data-v="${v}" aria-pressed="${String(val) === String(v)}"><b>${b}</b>${d ? `<span>${d}</span>` : ""}</button>`).join("")}</div>`;
@@ -1986,18 +2064,53 @@ function openFormat() {
       <div class="field"><label for="fm_rowh">Row height <span class="typ" id="fm_rowv">${F.rowh}px</span></label><input type="range" id="fm_rowh" min="30" max="140" step="2" value="${F.rowh}" style="accent-color:var(--accent)"></div>
       <div class="field"><span class="lbl">Options</span>
         <label class="ck"><input type="checkbox" id="fm_stripe" ${F.stripe ? "checked" : ""}> Striped rows</label>
+        <label class="ck"><input type="checkbox" id="fm_boldfirst" ${F.boldFirst ? "checked" : ""}> Bold first column</label>
+        <label class="ck"><input type="checkbox" id="fm_hover" ${F.hover ? "checked" : ""}> Highlight row under the mouse</label>
         <label class="ck"><input type="checkbox" id="fm_freeze" ${F.freeze ? "checked" : ""}> Freeze first column while scrolling sideways</label></div>
-      <div class="field"><span class="lbl">Columns in this sheet <span class="typ">untick to hide</span></span><div class="group">${cols.map(c => `<label class="ck"><input type="checkbox" data-vis="${esc(c.id)}" ${v.hidden.includes(c.id) ? "" : "checked"}> ${esc(c.label)}${v.widths[c.id] ? `<span class="n">${v.widths[c.id]}px</span>` : ""}</label>`).join("")}</div>
+      <div class="row2" style="flex:none;gap:16px">
+        <div class="field" style="flex:1"><span class="lbl">Cell text alignment</span>${ch("fm_align", F.align, [["left", "Left"], ["center", "Center"], ["right", "Right"]])}</div>
+        <div class="field" style="flex:1"><span class="lbl">Vertical alignment</span>${ch("fm_valign", F.valign, [["top", "Top"], ["middle", "Middle"], ["bottom", "Bottom"]])}</div></div>
+      <div class="row2" style="flex:none;gap:16px">
+        <div class="field" style="flex:1"><span class="lbl">Heading text</span>${ch("fm_hcase", F.hcase, [["upper", "UPPERCASE"], ["normal", "Normal case"]])}</div>
+        <div class="field" style="flex:1"><span class="lbl">Heading alignment</span>${ch("fm_halign", F.halign, [["left", "Left"], ["center", "Center"], ["right", "Right"]])}</div></div>
+      <div class="row2" style="flex:none;gap:16px">
+        <div class="field" style="flex:1"><span class="lbl">Cell padding</span>${ch("fm_pad", F.pad, [["tight", "Tight"], ["normal", "Normal"], ["roomy", "Roomy"]])}</div>
+        <div class="field" style="flex:1"><span class="lbl">Border colour</span>${ch("fm_border", F.border, [["soft", "Soft"], ["strong", "Strong"], ["accent", "Theme"]])}</div></div>
+      <div class="row2" style="flex:none;gap:16px">
+        <div class="field" style="flex:1"><span class="lbl">Date format</span>${ch("fm_datefmt", F.datefmt, [["dmy", "21 Sep 2026"], ["short", "21-Sep-26"], ["dash", "21-09-2026"], ["iso", "2026-09-21"], ["us", "Sep 21, 2026"]])}</div>
+        <div class="field" style="flex:1"><span class="lbl">Status values</span>${ch("fm_pill", F.pill, [["pill", "Pill", "Filled badge"], ["dot", "Dot", "Coloured dot"], ["text", "Text", "Coloured text"]])}</div></div>
+      <div class="field"><span class="lbl">Columns in this sheet <span class="typ">show · align · wrap · bold · highlight · width</span></span>
+        <div class="cfmt"><div class="cfh"><span>Column</span><span>Show</span><span>Align</span><span>Wrap</span><span>Bold</span><span>Highlight</span><span>Width</span></div>
+        ${cols.map(c => { const cf = v.colfmt[c.id] || {}; return `<div class="cfr" data-cf="${esc(c.id)}">
+          <span class="cn" title="${esc(c.label)}">${esc(c.label)}</span>
+          <input type="checkbox" data-vis="${esc(c.id)}" ${v.hidden.includes(c.id) ? "" : "checked"} aria-label="Show ${esc(c.label)}">
+          <span class="seg mini">${[["", "Auto"], ["left", "L"], ["center", "C"], ["right", "R"]].map(([a, l]) => `<button type="button" data-cfk="align" data-cfv="${a}" aria-pressed="${(cf.align || "") === a}" title="${a || "Use table setting"}">${l}</button>`).join("")}</span>
+          <select class="inp mini" data-cfk="wrap" aria-label="Wrap"><option value="" ${!cf.wrap ? "selected" : ""}>Auto</option><option value="on" ${cf.wrap === "on" ? "selected" : ""}>Wrap all</option><option value="off" ${cf.wrap === "off" ? "selected" : ""}>One line</option></select>
+          <button type="button" class="bbtn" data-cfk="bold" data-cfv="${cf.bold ? "" : "1"}" aria-pressed="${!!cf.bold}" title="Bold">B</button>
+          <span class="tints">${Object.keys(TINTS).map(t => `<button type="button" class="tint" data-cfk="color" data-cfv="${t === "none" ? "" : t}" aria-pressed="${(cf.color || "none") === t}" title="${t}" style="--d:${TINT_DOT[t]}"></button>`).join("")}</span>
+          <input class="inp mini" type="number" min="60" max="900" step="10" data-cfk="width" placeholder="auto" value="${v.widths[c.id] || ""}" aria-label="Width in pixels">
+        </div>`; }).join("")}</div>
         <div class="row2" style="flex:none"><button class="btn" type="button" id="fm_showall" style="flex:none">Show all columns</button><button class="btn" type="button" id="fm_resetw" style="flex:none">Reset column widths</button></div>
         <span class="hint">Drag the edge of a column heading to resize it. These settings are saved in this browser and don't change what others see.</span></div>
       <button class="btn ghost" type="button" id="fm_reset" style="align-self:flex-start">Restore default format</button>`;
     },
     mount: root => {
       const F = VP.fmt, live = () => { saveVP(); render(); };
-      [["fm_grid", "grid"], ["fm_head", "head"], ["fm_size", "size"], ["fm_lines", "lines"]].forEach(([id, key]) => { const g = root.querySelector("#" + id); pressGroup(g, ".choice", "v"); g.addEventListener("pick", () => { F[key] = g.dataset.v; live(); }); });
+      [["fm_grid", "grid"], ["fm_head", "head"], ["fm_size", "size"], ["fm_lines", "lines"], ["fm_align", "align"], ["fm_valign", "valign"], ["fm_hcase", "hcase"], ["fm_halign", "halign"], ["fm_pad", "pad"], ["fm_border", "border"], ["fm_datefmt", "datefmt"], ["fm_pill", "pill"]].forEach(([id, key]) => { const g = root.querySelector("#" + id); pressGroup(g, ".choice", "v"); g.addEventListener("pick", () => { F[key] = g.dataset.v; live(); }); });
       root.querySelector("#fm_rowh").addEventListener("input", e => { F.rowh = +e.target.value; root.querySelector("#fm_rowv").textContent = F.rowh + "px"; live(); });
       root.querySelector("#fm_stripe").addEventListener("change", e => { F.stripe = e.target.checked; live(); });
       root.querySelector("#fm_freeze").addEventListener("change", e => { F.freeze = e.target.checked; live(); });
+      root.querySelector("#fm_boldfirst").addEventListener("change", e => { F.boldFirst = e.target.checked; live(); });
+      root.querySelector("#fm_hover").addEventListener("change", e => { F.hover = e.target.checked; live(); });
+      const cfSet = (el, val) => { const row = el.closest("[data-cf]"), cid = row.dataset.cf, k = el.dataset.cfk, cf = colFmt(sid, cid);
+        if (k === "width") { const w = parseInt(val, 10); if (w >= 60) sheetVP(sid).widths[cid] = Math.min(900, w); else delete sheetVP(sid).widths[cid]; }
+        else if (val) cf[k] = k === "bold" ? true : val; else delete cf[k];
+        if (k === "align") row.querySelectorAll('[data-cfk="align"]').forEach(b => b.setAttribute("aria-pressed", b.dataset.cfv === (val || "")));
+        if (k === "color") row.querySelectorAll('[data-cfk="color"]').forEach(b => b.setAttribute("aria-pressed", (b.dataset.cfv || "") === (val || "")));
+        if (k === "bold") { el.setAttribute("aria-pressed", String(!!val)); el.dataset.cfv = val ? "" : "1"; }
+        live(); };
+      root.addEventListener("click", e => { const b = e.target.closest("button[data-cfk]"); if (b) cfSet(b, b.dataset.cfv); });
+      root.addEventListener("change", e => { const el = e.target.closest("select[data-cfk],input[data-cfk]"); if (el) cfSet(el, el.value); });
       root.addEventListener("change", e => { const id = e.target.dataset.vis; if (!id) return; const v = sheetVP(sid); v.hidden = e.target.checked ? v.hidden.filter(x => x !== id) : [...new Set([...v.hidden, id])]; live(); });
       root.querySelector("#fm_showall").onclick = () => { sheetVP(sid).hidden = []; root.querySelectorAll("[data-vis]").forEach(k => k.checked = true); live(); };
       root.querySelector("#fm_resetw").onclick = () => { sheetVP(sid).widths = {}; live(); root.querySelectorAll(".ck .n").forEach(n => n.remove()); };
