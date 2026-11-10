@@ -561,6 +561,11 @@ td.rmk .clamp{padding-right:22px}
 .wfpick .wfopt.t-bad{background:var(--bad-bg);color:var(--bad)}
 .wfpick .wfopt.t-neu{background:var(--neu-bg);color:var(--neu)}
 .wfpick .wfopt.t-info{background:var(--info-bg);color:var(--info)}
+.implist{display:flex;flex-direction:column;gap:6px;max-height:min(46vh,360px);overflow:auto;padding:2px}
+.improw{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(150px,220px);gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.improw .impmain{display:flex;flex-direction:column;gap:3px;min-width:0}
+.improw input[type=checkbox]{width:18px;height:18px}
+@media (max-width:640px){.improw{grid-template-columns:auto minmax(0,1fr)}.improw select{grid-column:2}}
 .cardbar{display:flex;justify-content:flex-end;margin:0 0 10px}
 .cardbar .btn{font-size:13px}
 .cardbar .hint{font-weight:400}
@@ -975,7 +980,7 @@ function renderNav() {
   $("#trkMark").textContent = ct ? (ct.short || shortOf(ct.name)) : "+";
   $("#trkMark").style.background = ct ? trackerColor(ct) : ""; $("#trkMark").style.color = ct ? "#fff" : "";
   $("#trkPop").innerHTML = trackerList().map(t => `<button type="button" data-trk="${esc(t.id)}"><span class="mini" style="background:${trackerColor(t)}">${esc(t.short || shortOf(t.name))}</span><span>${esc(t.name)}</span><span class="sub">${sheetList(t.id).length} sheets</span></button>`).join("") +
-    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="workflow">Status workflow for ${esc(ct.name)}…</button><button type="button" data-act="people">People & owners for ${esc(ct.name)} (${peopleOf(ct.id).people.length})…</button><button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
+    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="import">Add sheets to ${esc(ct.name)} from Excel…</button><button type="button" data-act="workflow">Status workflow for ${esc(ct.name)}…</button><button type="button" data-act="people">People & owners for ${esc(ct.name)} (${peopleOf(ct.id).people.length})…</button><button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
   $("#navHome").innerHTML = "";
   $("#nav").innerHTML = sheetList().map((s, i) => `<button type="button" data-sheet="${esc(s.id)}" aria-current="${S.view === "sheet" && S.sheetId === s.id}"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rowsOf(s.id).length}</span></button>`).join("");
 }
@@ -2131,6 +2136,7 @@ const tplCols = k => TEMPLATES[k].cols.map(([label, type, options]) => ({id: uid
 function renderModal() {
   const b = $("#mBody");
   b.innerHTML = `
+  ${M.sheetId ? "" : `<div class="banner" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px">Have the sheet in Excel? Upload it and each tab becomes a sheet in <b>${esc(curTracker()?.name || "this project")}</b>.</span><button type="button" class="btn" data-act="importx" style="flex:none">${ICON.ul} Upload Excel…</button></div>`}
   ${M.sheetId ? "" : `<div class="field"><span class="lbl">Start from</span><div class="tpls">${Object.entries(TEMPLATES).map(([k, t]) => `<button type="button" class="tpl" data-tpl="${k}" aria-pressed="${M.tpl === k}"><b>${t.name}</b><span>${t.desc}</span></button>`).join("")}</div></div>`}
   <div class="field"><label for="m_name">Sheet name</label><input class="inp" id="m_name" value="${esc(M.name)}" placeholder="e.g. UAT defects"></div>
   <div class="field"><label for="m_note">Pinned note <span class="typ">optional</span></label><input class="inp" id="m_note" value="${esc(M.note)}" placeholder="A reminder shown at the top of the sheet"></div>
@@ -2263,24 +2269,80 @@ async function splitExistingSheet() {
 $("#fileIn").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
   if (!window.XLSX) { toast("The Excel reader didn't load. Check your connection and try again."); return; }
-  if (!curTracker()) { toast("Create a tracker first, then import into it"); return; }
   try {
     toast("Reading " + f.name + "…");
     const wb = XLSX.read(await f.arrayBuffer(), {type: "array", cellDates: true});
     if (wb.SheetNames.includes("_tracker_meta")) { openExcelUpdate(wb, f.name); return; }
-    const names = new Set(sheetList().map(s => s.name));
-    let order = sheetList().reduce((m, s) => Math.max(m, s.order || 0), 0), nRows = 0, nSheets = 0; const tasks = []; const now = new Date().toISOString();
-    for (const wsName of wb.SheetNames) {
-      for (const parsed of inferSheets(wsName.trim(), XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header: 1, raw: true, defval: ""}))) {
-      let nm = parsed.name, k = 2; while (names.has(nm)) nm = `${parsed.name} (${k++})`; names.add(nm);
-      const sid = uid("s"); order++; nSheets++;
-      await store.put("sheets", sid, {name: nm, note: parsed.note, order, columns: parsed.columns, trackerId: curTracker()?.id || "bcp"});
-      parsed.body.forEach((cells, i) => { const rid = uid("r") + i; nRows++; tasks.push(() => store.put("rows", rid, {sheetId: sid, order: i + 1, cells, updatedAt: now})); });
-    } }
-    await pool(tasks);
-    toast(`Imported ${nSheets} sheets and ${nRows} entries`); render();
-  } catch (err) { toast("Couldn't read that file. Is it an Excel workbook?"); }
+    const items = [];
+    for (const wsName of wb.SheetNames) for (const parsed of inferSheets(wsName.trim(), XLSX.utils.sheet_to_json(wb.Sheets[wsName], {header: 1, raw: true, defval: ""}))) items.push({tab: wsName.trim(), parsed});
+    if (!items.length) { toast("No tables found in that file"); return; }
+    openImportDialog(items, f.name);
+  } catch (err) { console.error(err); toast("Couldn't read that file. Is it an Excel workbook?"); }
 });
+/* ---------- Import sheets into a project ---------- */
+async function importItems(items, trackerId) {
+  const now = new Date().toISOString(), tasks = [], snaps = [];
+  const names = new Set(sheetList(trackerId).map(s => s.name));
+  let order = sheetList(trackerId).reduce((m, s) => Math.max(m, s.order || 0), 0), nRows = 0, nNew = 0, nAdd = 0;
+  for (const it of items) {
+    const P = it.parsed;
+    if (it.target && S.sheets[it.target]) {
+      const sid = it.target, sh = S.sheets[sid]; snaps.push(["sheets", sid, clone(sh)]);
+      const cols = [...(sh.columns || [])], map = {};
+      P.columns.forEach(pc => { const ex = cols.find(c => c.type !== "calc" && c.label.trim().toLowerCase() === pc.label.trim().toLowerCase()); if (ex) map[pc.id] = ex.id; else { const nc = {...pc, id: uid("c")}; cols.push(nc); map[pc.id] = nc.id; } });
+      const add = {};
+      let o = rowsOf(sid).reduce((m, r) => Math.max(m, r.order || 0), 0);
+      P.body.forEach((cells, i) => { const nc = {}; Object.entries(cells).forEach(([k, v]) => { if (map[k] && v !== "") nc[map[k]] = v; }); if (!Object.keys(nc).length) return;
+        cols.forEach(c => { if (c.type === "select" && nc[c.id] && !(c.options || []).includes(nc[c.id])) (add[c.id] = add[c.id] || new Set()).add(nc[c.id]); });
+        const rid = uid("r") + i, oo = ++o; nRows++; snaps.push(["rows", rid, null]); tasks.push(() => store.put("rows", rid, {sheetId: sid, order: oo, cells: nc, updatedAt: now})); });
+      await store.put("sheets", sid, {...sh, columns: cols.map(c => add[c.id] ? {...c, options: [...(c.options || []), ...add[c.id]]} : c)}); nAdd++;
+    } else {
+      const base = (it.name || P.name).trim() || P.name; let nm = base, k = 2; while (names.has(nm)) nm = `${base} (${k++})`; names.add(nm);
+      const sid = uid("s"); order++; nNew++; snaps.push(["sheets", sid, null]);
+      await store.put("sheets", sid, {name: nm, note: P.note, order, columns: P.columns, trackerId});
+      P.body.forEach((cells, i) => { const rid = uid("r") + i; nRows++; snaps.push(["rows", rid, null]); tasks.push(() => store.put("rows", rid, {sheetId: sid, order: i + 1, cells, updatedAt: now})); });
+    }
+  }
+  await pool(tasks);
+  return {nNew, nAdd, nRows, snaps};
+}
+function openImportDialog(items, fname) {
+  const ct = curTracker();
+  items.forEach(it => { it.on = true; it.name = it.parsed.name; it.target = ""; });
+  let trk = ct?.id || "__new";
+  const opts = tId => sheetList(tId).map(s => `<option value="${esc(s.id)}">Add rows to “${esc(s.name)}”</option>`).join("");
+  const rowsHTML = () => items.map((it, i) => { const same = sheetList(trk).find(s => s.name.trim().toLowerCase() === it.name.trim().toLowerCase());
+    return `<div class="improw" data-i="${i}"><input type="checkbox" data-imp="on" ${it.on ? "checked" : ""} aria-label="Import this table">
+      <div class="impmain"><input class="inp mini" data-imp="name" value="${esc(it.name)}" aria-label="Sheet name" ${it.target ? "disabled" : ""}>
+      <span class="hint">${it.parsed.body.length} rows · ${it.parsed.columns.length} columns${it.tab !== it.parsed.name ? ` · from tab “${esc(it.tab)}”` : ""}${same && !it.target ? ` · <b style="color:var(--warn)">a sheet with this name exists</b>` : ""}</span></div>
+      <select class="inp mini" data-imp="target" aria-label="Where to put it"><option value="">New sheet</option>${trk === "__new" ? "" : opts(trk)}</select></div>`; }).join("");
+  openDialog({
+    eyebrow: fname, title: "Import sheets from Excel", saveLabel: "Import",
+    body: () => `<div class="field"><label for="im_trk">Add to project</label><select class="inp" id="im_trk">${trackerList().map(t => `<option value="${esc(t.id)}" ${t.id === trk ? "selected" : ""}>${esc(t.name)} (${sheetList(t.id).length} sheets)</option>`).join("")}<option value="__new" ${trk === "__new" ? "selected" : ""}>+ New project…</option></select></div>
+      <div class="field" id="im_newf" ${trk === "__new" ? "" : "hidden"}><label for="im_newn">New project name</label><input class="inp" id="im_newn" placeholder="e.g. SCB"></div>
+      <div class="field"><span class="lbl">Tables found (${items.length})</span><div class="implist" id="im_list">${rowsHTML()}</div></div>
+      <p class="hint" style="margin:0">Each tab (and each titled section inside a tab) becomes its own sheet. Choose <b>Add rows to …</b> to append to a sheet you already have; columns are matched by name and any new columns are added.</p>`,
+    mount: root => {
+      const list = root.querySelector("#im_list"), sel = root.querySelector("#im_trk");
+      const redraw = () => { list.innerHTML = rowsHTML(); list.querySelectorAll(".improw").forEach(r => { r.querySelector('[data-imp=target]').value = items[+r.dataset.i].target; }); };
+      sel.addEventListener("change", () => { trk = sel.value; items.forEach(it => it.target = ""); root.querySelector("#im_newf").hidden = trk !== "__new"; redraw(); });
+      list.addEventListener("input", e => { const r = e.target.closest(".improw"); if (!r) return; const it = items[+r.dataset.i], k = e.target.dataset.imp;
+        if (k === "on") it.on = e.target.checked; else if (k === "name") it.name = e.target.value; });
+      list.addEventListener("change", e => { const r = e.target.closest(".improw"); if (!r) return; const it = items[+r.dataset.i];
+        if (e.target.dataset.imp === "on") it.on = e.target.checked; if (e.target.dataset.imp === "target") { it.target = e.target.value; redraw(); } });
+    },
+    onSave: async root => {
+      const pick = items.filter(it => it.on); if (!pick.length) { toast("Tick at least one table to import"); return false; }
+      let tId = trk;
+      if (tId === "__new") { const name = root.querySelector("#im_newn").value.trim(); if (!name) { toast("Enter the new project's name"); return false; }
+        tId = uid("t"); await store.put("trackers", tId, {name, short: shortOf(name), order: trackerList().reduce((m, x) => Math.max(m, x.order || 0), 0) + 1, color: TCOLORS[trackerList().length % TCOLORS.length]}); }
+      toast("Importing…");
+      const r = await importItems(pick, tId);
+      if (tId !== S.trackerId) setTracker(tId); else render();
+      pushUndo(`${r.nNew ? `${r.nNew} new sheet${r.nNew === 1 ? "" : "s"}` : ""}${r.nNew && r.nAdd ? " and " : ""}${r.nAdd ? `rows added to ${r.nAdd} sheet${r.nAdd === 1 ? "" : "s"}` : ""} · ${r.nRows} entries imported`, r.snaps);
+    }
+  });
+}
 /* ---------- Upload edits from an exported Excel ---------- */
 function openExcelUpdate(wb, fname) {
   const meta = XLSX.utils.sheet_to_json(wb.Sheets._tracker_meta, {header: 1, defval: ""}).slice(1).filter(r => r[0] && r[1]);
@@ -2306,16 +2368,21 @@ function openExcelUpdate(wb, fname) {
     }
     plan.push({tab, sid, name: sh.name, updates, creates, changed});
   }
-  const total = plan.reduce((m, p) => m + (p.updates?.length || 0) + (p.creates?.length || 0), 0);
+  const known = new Set(meta.map(m => m[0])), extra = [];
+  wb.SheetNames.filter(n => n !== "_tracker_meta" && !known.has(n)).forEach(n => inferSheets(n.trim(), XLSX.utils.sheet_to_json(wb.Sheets[n], {header: 1, raw: true, defval: ""})).forEach(parsed => extra.push({tab: n, parsed, name: parsed.name, target: ""})));
+  const total = plan.reduce((m, p) => m + (p.updates?.length || 0) + (p.creates?.length || 0), 0) + extra.length;
   openDialog({
     eyebrow: fname, title: "Upload edits from Excel", saveLabel: total ? `Apply ${total} change${total === 1 ? "" : "s"}` : "Close",
     body: () => `<p class="hint" style="margin:0">This file was downloaded from the tracker. Here's what changed:</p>
       <div class="group">${plan.map(p => p.missing ? `<div class="ck"><span>${esc(p.tab)}</span><span class="n" style="color:var(--warn)">sheet not found, skipped</span></div>`
-        : `<div class="ck"><b>${esc(p.name)}</b><span class="n">${p.updates.length} updated (${p.changed} cells) · ${p.creates.length} new</span></div>`).join("")}</div>
+        : `<div class="ck"><b>${esc(p.name)}</b><span class="n">${p.updates.length} updated (${p.changed} cells) · ${p.creates.length} new</span></div>`).join("")}
+      ${extra.map((x, i) => `<label class="ck"><input type="checkbox" data-xtra="${i}" checked> <b>${esc(x.name)}</b><span class="n" style="color:var(--good)">new tab · add as a new sheet in ${esc(curTracker()?.name || "")} (${x.parsed.body.length} rows)</span></label>`).join("")}</div>
       ${total ? `<span class="hint">Rows you deleted in Excel are not deleted here. Calculated columns (Aging, Days left) are ignored and recalculate on their own.</span>` : `<div class="banner">No changes found compared with the tracker.</div>`}`,
-    onSave: async () => {
+    onSave: async root => {
       if (!total) return;
-      const now = new Date().toISOString(), snaps = [], tasks = [];
+      const pickX = extra.filter((x, i) => root.querySelector(`[data-xtra="${i}"]`)?.checked);
+      const xr = pickX.length ? await importItems(pickX, curTracker()?.id || "bcp") : {snaps: [], nNew: 0};
+      const now = new Date().toISOString(), snaps = [...xr.snaps], tasks = [];
       for (const p of plan) { if (p.missing) continue;
         p.updates.forEach(u => { snaps.push(["rows", u.rid, clone(S.rows[u.rid])]); tasks.push(() => store.put("rows", u.rid, {...S.rows[u.rid], cells: u.cells, updatedAt: now})); });
         let order = rowsOf(p.sid).reduce((m, r) => Math.max(m, r.order || 0), 0);
@@ -2326,7 +2393,7 @@ function openExcelUpdate(wb, fname) {
         [...p.updates.map(u => u.cells), ...p.creates].forEach(cells => (sh.columns || []).forEach(c => { if (c.type === "select" && cells[c.id] && !(c.options || []).includes(cells[c.id])) (add[c.id] = add[c.id] || new Set()).add(cells[c.id]); }));
         if (Object.keys(add).length) { snaps.push(["sheets", p.sid, clone(sh)]); store.put("sheets", p.sid, {...sh, columns: sh.columns.map(c => add[c.id] ? {...c, options: [...(c.options || []), ...add[c.id]]} : c)}); }
       }
-      await pool(tasks, 10); render(); pushUndo(`${total} change${total === 1 ? "" : "s"} uploaded from Excel`, snaps);
+      await pool(tasks, 10); render(); pushUndo(`${total} change${total === 1 ? "" : "s"} uploaded from Excel${xr.nNew ? ` · ${xr.nNew} new sheet${xr.nNew === 1 ? "" : "s"}` : ""}`, snaps);
     }
   });
 }
@@ -3112,6 +3179,7 @@ document.addEventListener("click", e => {
     case "add": openDrawer(S.sheetId, null); break;
     case "newsheet": openModal(null); break;
     case "import": $("#fileIn").click(); break;
+    case "importx": closeModal(); $("#fileIn").click(); break;
     case "export": openExport(S.view === "sheet" ? "sheet" : "tracker"); break;
     case "exportone": openExport("sheet"); break;
     case "addcol": openAddColumn(); break;
