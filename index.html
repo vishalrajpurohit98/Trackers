@@ -590,6 +590,24 @@ td.rmk .clamp{padding-right:22px}
 .userchip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--side-muted);overflow:hidden}
 .userchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .userchip button{all:unset;cursor:pointer;color:var(--side-ink);font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.2)}
+/* Sharing */
+.shlist{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow:auto}
+.shrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.shmain{display:flex;flex-direction:column;gap:4px;flex:1;min-width:220px}
+.shmain .inp{font-family:var(--f-mono);font-size:12px}
+.shacts{display:flex;gap:4px;flex-wrap:wrap}
+.shsheets{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 12px;max-height:200px;overflow:auto}
+.or-line{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+.or-line::before,.or-line::after{content:"";flex:1;border-top:1px solid var(--line)}
+.viewbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:45;display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:var(--ink);color:var(--bg);font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100vw - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.viewbar svg{width:14px;height:14px;flex:none}
+body.viewonly .side-add,body.viewonly [data-act=add],body.viewonly tr.addrow,body.viewonly th.addcol,body.viewonly [data-act=addcolq],body.viewonly [data-act=sheetmenu],body.viewonly [data-act=import],body.viewonly [data-act=share],body.viewonly .addnote,body.viewonly [data-act=noteedit],body.viewonly [data-act=cardset],body.viewonly [data-act=markred],body.viewonly .rowck,body.viewonly .flag:not(.open),body.viewonly #ckAll,body.viewonly .bulkbar,body.viewonly .rmk-ai,body.viewonly #trkPop,body.viewonly .trk-btn small,body.viewonly .dr-foot .btn:not(.x),body.viewonly #drImp,body.viewonly #drForm .rmkadd,body.viewonly #drForm [data-addopt],body.viewonly #drForm .stamp,body.viewonly .rsz{display:none!important}
+body.viewonly .trk-btn{pointer-events:none}
+body.viewonly .dr-foot{display:none!important}
+body.viewonly #colMenu .rn,body.viewonly #colMenu [data-cm=aging],body.viewonly #colMenu [data-cm=edit],body.viewonly #colMenu [data-cm=left],body.viewonly #colMenu [data-cm=right],body.viewonly #colMenu [data-cm=remark],body.viewonly #colMenu [data-cm=assignee],body.viewonly #colMenu [data-cm=statuscol],body.viewonly #colMenu [data-cm=titlecol],body.viewonly #colMenu [data-cm=hide]~hr{display:none!important}
+body.viewonly td.editable{cursor:pointer}
+body.viewonly #drForm .inp[disabled]{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+body.viewonly .main{padding-top:52px}
 /* Sheet tabs */
 .tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin-top:-6px;scrollbar-width:thin}
 .tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 14px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;border-radius:8px 8px 0 0;flex:none}
@@ -1033,7 +1051,7 @@ function showSetup(msg) {
   $("#cfgSave").onclick = () => { const c = parseCfgText($("#cfgIn").value); if (!c) return showSetup("That doesn't look like a Firebase config. Copy the whole { … } block."); if (!c.databaseURL) return showSetup("The config has no databaseURL. Create a Realtime Database first, then copy the config again."); try { localStorage.setItem("fb-config", JSON.stringify(c)); } catch (e) {} location.reload(); };
 }
 function showSignIn(msg, ok, closable) {
-  gate(`${closable ? `<button class="icon" type="button" id="gClose" aria-label="Close" style="align-self:flex-end;margin:-12px -12px -30px 0">✕</button>` : ""}<div class="brand-mark" style="width:44px;height:44px">BT</div><h1>${closable ? "Sign in to show your name" : "Bank Project Tracker"}</h1><p>${closable ? "Optional. Your edits will show your name instead of “Guest”." : "Sign in to open your trackers. Your data is private to your account."}</p>
+  gate(`${closable ? `<button class="icon" type="button" id="gClose" aria-label="Close" style="align-self:flex-end;margin:-12px -12px -30px 0">✕</button>` : ""}<div class="brand-mark" style="width:44px;height:44px">BT</div><h1>${closable ? "Sign in to show your name" : "Bank Project Tracker"}</h1><p>${closable ? "Optional. Your edits will show your name instead of “Guest”." : (VIEW_ID ? "Sign in to view the sheets shared with you." : "Sign in to open your trackers. Your data is private to your account.")}</p>
     <button class="btn primary" type="button" id="gIn"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3Z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"/><path fill="#fff" opacity=".7" d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9.1L6.4 14Z"/><path fill="#fff" opacity=".55" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5L6.4 10C7.2 7.7 9.4 5.9 12 5.9Z"/></svg> Continue with Google</button>
     <div class="or">or email</div>
     <input class="inp" id="eMail" type="email" placeholder="you@company.com" autocomplete="username">
@@ -1062,6 +1080,7 @@ async function init() {
   try { firebase.initializeApp(cfg); } catch (e) { showSetup("Firebase rejected that config: " + e.message); return; }
   const auth = firebase.auth(); FB = firebase.database();
   auth.getRedirectResult().catch(() => {});
+  if (VIEW_ID) { startViewer(auth); return; }
   let started = false;
   auth.onAuthStateChanged(user => {
     if (LEAVING) return;
@@ -1134,13 +1153,146 @@ function startSession() {
 }
 // Back/forward cache: a page restored after sign-out must re-check the session, never show old data
 window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+
+/* ---------- Sharing: live, view-only links to selected sheets ---------- */
+const VIEW_ID = (new URLSearchParams(location.search).get("view") || "").replace(/[^A-Za-z0-9_-]/g, "");
+const SHARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+let SHARES = {}, VIEWONLY = false;
+const emailKey = e => String(e || "").trim().toLowerCase().replace(/\./g, ",");
+const shareURL = id => location.origin + location.pathname + "?view=" + id;
+function normalizeKind(kind, map) {
+  if (kind === "sheets") Object.values(map).forEach(sh => { sh.columns = Array.isArray(sh.columns) ? sh.columns : Object.values(sh.columns || {}); sh.columns.forEach(c => { if (c.type === "select") c.options = Array.isArray(c.options) ? c.options : Object.values(c.options || {}); }); if (sh.cardFields && !Array.isArray(sh.cardFields)) sh.cardFields = Object.values(sh.cardFields); });
+  if (kind === "rows") Object.values(map).forEach(r => { r.cells = r.cells || {}; });
+  if (kind === "trackers") Object.values(map).forEach(t => { if (t.holidays && !Array.isArray(t.holidays)) t.holidays = Object.values(t.holidays); if (t.statuses && !Array.isArray(t.statuses)) t.statuses = Object.values(t.statuses); });
+  return map;
+}
+const shareIdx = () => FB.ref(`users/${ME.uid}/shareIndex`);
+function startShares() {
+  let first = true;
+  shareIdx().on("value", snap => { SHARES = snap.val() || {}; if (first) { first = false; Object.keys(SHARES).forEach(id => pushShare(id).catch(() => {})); } });
+}
+function sharesWith(sid) { return Object.entries(SHARES).filter(([, m]) => m.sheets && m.sheets[sid]).map(([id]) => id); }
+function mirrorShare(kind, id, c, was) {
+  if (!ME || VIEWONLY || !Object.keys(SHARES).length) return;
+  const w = (sh, path, v) => (v == null ? FB.ref(`shares/${sh}/${path}`).remove() : FB.ref(`shares/${sh}/${path}`).set(v)).catch(() => {});
+  if (kind === "rows") { const sid = (c || was || {}).sheetId; sharesWith(sid).forEach(sh => w(sh, `rows/${id}`, c)); if (c && was && was.sheetId && was.sheetId !== c.sheetId) sharesWith(was.sheetId).forEach(sh => w(sh, `rows/${id}`, null)); }
+  else if (kind === "sheets") sharesWith(id).forEach(sh => w(sh, `sheets/${id}`, c));
+  else if (kind === "trackers") Object.entries(SHARES).filter(([, m]) => m.trackerId === id).forEach(([sh]) => c && w(sh, "tracker", c));
+}
+async function pushShare(id) {
+  const m = SHARES[id]; if (!m) return;
+  const sheets = {}, rows = {}, tid0 = m.trackerId;
+  Object.keys(m.sheets || {}).forEach(sid => { if (S.sheets[sid]) sheets[sid] = JSON.parse(JSON.stringify(S.sheets[sid])); });
+  Object.entries(S.rows).forEach(([rid, r]) => { if (sheets[r.sheetId]) rows[rid] = JSON.parse(JSON.stringify(r)); });
+  const t = S.trackers[tid0] || trackerList().find(x => x.id === tid0) || {name: "Tracker"};
+  const emails = {}; Object.values(m.emails || {}).forEach(e => { emails[emailKey(e)] = true; });
+  await FB.ref(`shares/${id}`).set({owner: ME.uid, ownerEmail: ME.email || "", title: m.title || "", mode: m.mode, emails, trackerId: tid0, tracker: JSON.parse(JSON.stringify({...t, id: undefined})), sheets, rows, updatedAt: new Date().toISOString()});
+}
+function newShareId() { const a = new Uint8Array(15); crypto.getRandomValues(a); return Array.from(a, b => "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 57]).join(""); }
+function copyText(t) { (navigator.clipboard?.writeText(t) || Promise.reject()).then(() => toast("Link copied"), () => { prompt("Copy this link:", t); }); }
+function openShares(editId) {
+  if (!ME) return; const ct = curTracker(); if (!ct) { toast("Create a tracker first"); return; }
+  const list = Object.entries(SHARES).sort((a, b) => (b[1].createdAt || "").localeCompare(a[1].createdAt || ""));
+  const ed = editId ? SHARES[editId] : null;
+  const pickT = ed ? ed.trackerId : ct.id, shs = sheetList(pickT);
+  const preSel = ed ? new Set(Object.keys(ed.sheets || {})) : new Set(S.view === "sheet" && S.sheetId ? [S.sheetId] : []);
+  let mode = ed ? ed.mode : "emails";
+  const accessTxt = m => m.mode === "link" ? "Anyone with the link" : `${Object.keys(m.emails || {}).length} ${Object.keys(m.emails || {}).length === 1 ? "person" : "people"}: ${Object.values(m.emails || {}).slice(0, 3).map(esc).join(", ")}${Object.keys(m.emails || {}).length > 3 ? "…" : ""}`;
+  openDialog({
+    eyebrow: ed ? "Edit link" : `${list.length} active link${list.length === 1 ? "" : "s"}`, title: ed ? (ed.title || "Shared sheets") : "Share sheets", saveLabel: ed ? "Save changes" : "Create link",
+    body: () => `${!ed && list.length ? `<div class="field"><span class="lbl">Your links</span><div class="shlist">${list.map(([id, m]) => { const n = Object.keys(m.sheets || {}).filter(x => S.sheets[x]).length; return `<div class="shrow" data-sh="${esc(id)}"><div class="shmain"><b>${esc(m.title || "Shared sheets")}</b><span class="hint">${n} sheet${n === 1 ? "" : "s"} · ${accessTxt(m)}</span><input class="inp mini" readonly value="${esc(shareURL(id))}" aria-label="Link"></div><div class="shacts"><button type="button" class="btn" data-shcopy>Copy link</button><button type="button" class="btn ghost" data-shedit>Edit</button><button type="button" class="btn ghost" data-shstop style="color:var(--bad)">Stop sharing</button></div></div>`; }).join("")}</div></div><div class="or-line">New link</div>` : ""}
+      <div class="field"><label for="sh_title">Link name <span class="typ">shown to viewers</span></label><input class="inp" id="sh_title" value="${esc(ed ? ed.title : (preSel.size === 1 ? S.sheets[[...preSel][0]]?.name : `${ct.name} sheets`) || "")}"></div>
+      <div class="field"><span class="lbl">Sheets to share <span class="typ">from ${esc((trackerList().find(t => t.id === pickT) || {}).name || "")}</span></span><div class="shsheets">${shs.map(s0 => `<label class="ck"><input type="checkbox" data-shs="${esc(s0.id)}" ${preSel.has(s0.id) ? "checked" : ""}> ${esc(s0.name)} <span class="n">${rowsOf(s0.id).length}</span></label>`).join("")}</div></div>
+      <div class="field"><span class="lbl">Who can view</span><div class="choices" id="sh_mode">
+        <button type="button" class="choice" data-v="emails" aria-pressed="${mode === "emails"}"><b>Only people I add</b><span>They sign in with that email</span></button>
+        <button type="button" class="choice" data-v="link" aria-pressed="${mode === "link"}"><b>Anyone with the link</b><span>No sign-in. Anyone it's forwarded to can view</span></button></div></div>
+      <div class="field" id="sh_emf" ${mode === "link" ? "hidden" : ""}><label for="sh_em">Email addresses <span class="typ">comma or new line</span></label><textarea class="inp" id="sh_em" rows="3" placeholder="manager@bank.com, colleague@fable.com">${esc(ed ? Object.values(ed.emails || {}).join(", ") : "")}</textarea><span class="hint">They sign in with Google, or with email and password. If they use a password, they confirm their email once.</span></div>
+      <p class="hint" style="margin:0">Viewers can't change anything. They see your edits to these sheets live, until you stop sharing. Notes, status colours and aging come along; your other sheets stay private.</p>`,
+    mount: root => {
+      const g = root.querySelector("#sh_mode"); g.dataset.s = mode; pressGroup(g, ".choice", "s"); g.addEventListener("pick", () => { mode = g.dataset.s; root.querySelector("#sh_emf").hidden = mode === "link"; });
+      root.querySelectorAll(".shrow").forEach(r => { const id = r.dataset.sh;
+        r.querySelector("[data-shcopy]").onclick = () => copyText(shareURL(id));
+        r.querySelector("[data-shedit]").onclick = () => { closeDialog(true); openShares(id); };
+        const st = r.querySelector("[data-shstop]"); st.onclick = async () => { if (!st.dataset.armed) { st.dataset.armed = "1"; st.textContent = "Click again to stop"; return; } await FB.ref(`shares/${id}`).remove().catch(() => {}); await shareIdx().child(id).remove(); delete SHARES[id]; toast("Link turned off"); closeDialog(true); openShares(); }; });
+    },
+    onSave: async root => {
+      const sheets = {}; root.querySelectorAll("[data-shs]:checked").forEach(i => sheets[i.dataset.shs] = true);
+      if (!Object.keys(sheets).length) { toast("Tick at least one sheet"); return false; }
+      const emails = {}; if (mode === "emails") { const list2 = root.querySelector("#sh_em").value.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+        const bad = list2.filter(x => !/^[^@\s#$\[\]\/]+@[^@\s#$\[\]\/]+\.[^@\s#$\[\]\/]+$/.test(x)); if (bad.length) { toast("Check these emails: " + bad.join(", ")); return false; }
+        if (!list2.length) { toast("Add at least one email, or choose Anyone with the link"); return false; } list2.forEach(e => emails[emailKey(e)] = e); }
+      const id = editId || newShareId();
+      const meta = {title: root.querySelector("#sh_title").value.trim() || "Shared sheets", sheets, mode, emails, trackerId: pickT, createdAt: ed?.createdAt || new Date().toISOString()};
+      try { await shareIdx().child(id).set(meta); SHARES[id] = meta; await pushShare(id); }
+      catch (e) { toast(e.code === "PERMISSION_DENIED" || /permission/i.test(e.message || "") ? "Sharing is blocked by the database rules. Publish the rules from README step 1.3." : "Couldn't share: " + e.message); return false; }
+      copyText(shareURL(id));
+      closeDialog(true); openShares(); return false;
+    }
+  });
+}
+/* ---------- Viewer (someone opened a ?view= link) ---------- */
+function startViewer(auth) {
+  VIEWONLY = true; document.body.classList.add("viewonly");
+  store = {mode: "view", async put() { toast("View only. You can't change a shared sheet."); }, async del() { toast("View only. You can't change a shared sheet."); }};
+  const bar = document.createElement("div"); bar.className = "viewbar"; bar.id = "viewBar"; bar.innerHTML = `${SHARE_ICON}<span>View only</span>`; document.body.append(bar);
+  let ref = null, gotData = false;
+  const show = (html) => gate(`<div class="brand-mark" style="width:44px;height:44px">BT</div>${html}`);
+  const sub = () => {
+    if (ref) ref.off();
+    ref = FB.ref(`shares/${VIEW_ID}`);
+    ref.on("value", snap => {
+      const d = snap.val();
+      if (!d) { show(`<h1>This link isn't active</h1><p>The owner stopped sharing these sheets, or the link is incomplete. Ask them for a new link.</p>`); return; }
+      const T = d.trackerId || "shared", sheets = normalizeKind("sheets", d.sheets || {}), rows = normalizeKind("rows", d.rows || {});
+      Object.values(sheets).forEach(x => x.trackerId = T);
+      S.trackers = normalizeKind("trackers", {[T]: {...(d.tracker || {name: "Shared"}), name: d.title || d.tracker?.name || "Shared sheets"}}); S.sheets = sheets; S.rows = rows; S.trackerId = T;
+      if (!S.sheetId || !S.sheets[S.sheetId]) { const f = Object.entries(sheets).sort((a, b) => (a[1].order ?? 0) - (b[1].order ?? 0))[0]; S.sheetId = f ? f[0] : null; S.view = f ? "sheet" : "home"; }
+      bar.innerHTML = `${SHARE_ICON}<span><b>View only</b> · shared by ${esc(d.ownerEmail || "the owner")} · live</span>`;
+      S.ready = true; setSync("ok", "Live · view only"); $("#gate").hidden = true; gotData = true;
+      if (!drawerOpen() && !CM && $("#dlg").hidden) render(); else renderNav();
+    }, err => {
+      const u = auth.currentUser;
+      if (!u || u.isAnonymous) { showSignIn("These sheets are shared with specific people. Sign in with the email they were shared with. If you're sure you're on the list, the owner may have turned this link off."); return; }
+      if (u.providerData?.some(p => p.providerId === "password") && !u.emailVerified) {
+        show(`<h1>Confirm your email</h1><p>You're signed in as <b>${esc(u.email)}</b>. To open shared sheets, confirm this email address once.</p><button class="btn primary" type="button" id="vfSend">Send confirmation email</button><button class="btn" type="button" id="vfDone">I've confirmed it</button><button class="btn ghost" type="button" id="vfOut">Use a different account</button><div id="vfMsg" class="ok"></div>`);
+        $("#vfSend").onclick = () => u.sendEmailVerification().then(() => $("#vfMsg").textContent = "Sent. Check your inbox, click the link, then come back here.").catch(e => $("#vfMsg").textContent = e.message);
+        $("#vfDone").onclick = async () => { await u.reload(); await u.getIdToken(true); sub(); };
+        $("#vfOut").onclick = () => auth.signOut();
+        return;
+      }
+      show(`<h1>No access</h1><p><b>${esc(u.email || "This account")}</b> isn't on the list for this link, or the owner turned the link off. Ask the owner to add your email, or sign in with the email they used.</p><button class="btn" type="button" id="vfOut">Use a different account</button>`);
+      $("#vfOut").onclick = () => auth.signOut();
+    });
+  };
+  auth.onAuthStateChanged(user => {
+    ME = user && !user.isAnonymous ? user : null;
+    $("#userChip").hidden = !ME; if (ME) { $("#userEmail").textContent = ME.email || "Signed in"; $("#signOutBtn").textContent = "Sign out"; }
+    sub();
+  });
+  $("#signOutBtn").onclick = () => auth.signOut().then(() => location.replace(location.href));
+  window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+  // view-only guards
+  const OK_ACTS = new Set(["toggleside", "theme", "fullscreen", "export", "exportone", "filter", "clear", "fmt", "cmdk", "keys", "onlyred", "attn", "ai", "notecancel"]);
+  document.addEventListener("click", e => {
+    if (!VIEWONLY) return;
+    const a = e.target.closest("[data-act]");
+    if (a && !OK_ACTS.has(a.dataset.act) && !a.closest("#dlg") && !a.closest("#modal")) { e.preventDefault(); e.stopImmediatePropagation(); toast("View only"); return; }
+    if (e.target.closest("[data-imp], .rowck, [data-dragcol] .rsz")) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    const td = e.target.closest("td[data-cell]");
+    if (td && !e.target.closest("[data-rmksum]")) { e.preventDefault(); e.stopImmediatePropagation(); const tr = td.closest("tr[data-row]"); if (tr) openDrawer(S.rows[tr.dataset.row]?.sheetId, tr.dataset.row); }
+  }, true);
+  document.addEventListener("keydown", e => { if (!VIEWONLY) return; const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName); if (!typing && (e.key === "n" || e.key === "N" || ((e.ctrlKey || e.metaKey) && /^[zZvV]$/.test(e.key)))) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+  document.addEventListener("paste", e => { if (VIEWONLY) e.stopImmediatePropagation(); }, true);
+  document.addEventListener("dragstart", e => { if (VIEWONLY) e.preventDefault(); }, true);
+  const od = openDrawer; openDrawer = function (...a) { od.apply(this, a); if (!VIEWONLY) return; $("#drTitle").textContent = $("#drTitle").textContent === "New entry" ? "Entry" : $("#drTitle").textContent; $("#drForm").querySelectorAll("input, textarea, select, button").forEach(el => { if (el.tagName === "BUTTON") el.disabled = true; else el.readOnly = el.disabled = true; }); };
+}
 function startSync() {
   const BASE = `users/${ME.uid}/${ROOT}`;
   const ref = p => FB.ref(`${BASE}/${p}`);
   const clean = d => JSON.parse(JSON.stringify(d));
   store = { mode: "cloud",
-    async put(kind, id, data) { S[kind][id] = data; bumpPending(1); const c = clean(data); if (kind === "rows" && ME) c.updatedBy = ME.email || ME.displayName || "Signed-in user"; try { await ref(`${kind}/${id}`).set(c); } catch (e) { toast("Couldn't save: " + (e.code === "PERMISSION_DENIED" ? "your account doesn't have write access" : e.message)); } finally { bumpPending(-1); } },
-    async del(kind, id) { delete S[kind][id]; bumpPending(1); try { await ref(`${kind}/${id}`).remove(); } catch (e) { toast("Couldn't delete: " + e.message); } finally { bumpPending(-1); } } };
+    async put(kind, id, data) { S[kind][id] = data; bumpPending(1); const c = clean(data); if (kind === "rows" && ME) c.updatedBy = ME.email || ME.displayName || "Signed-in user"; try { await ref(`${kind}/${id}`).set(c); mirrorShare(kind, id, c); } catch (e) { toast("Couldn't save: " + (e.code === "PERMISSION_DENIED" ? "your account doesn't have write access" : e.message)); } finally { bumpPending(-1); } },
+    async del(kind, id) { const was = S[kind][id]; delete S[kind][id]; bumpPending(1); try { await ref(`${kind}/${id}`).remove(); mirrorShare(kind, id, null, was); } catch (e) { toast("Couldn't delete: " + e.message); } finally { bumpPending(-1); } } };
   store = wrapStore(store);
   setSync("saving", "Loading your sheets…");
   let got = {trackers: false, sheets: false, rows: false}, online = true;
@@ -1154,8 +1306,8 @@ function startSync() {
       if (kind === "sheets") Object.values(map).forEach(sh => { sh.columns = Array.isArray(sh.columns) ? sh.columns : Object.values(sh.columns || {}); sh.columns.forEach(c => { if (c.type === "select") c.options = Array.isArray(c.options) ? c.options : Object.values(c.options || {}); }); });
       if (kind === "rows") Object.values(map).forEach(r => { r.cells = r.cells || {}; });
       if (kind === "trackers") Object.values(map).forEach(t => { if (t.holidays && !Array.isArray(t.holidays)) t.holidays = Object.values(t.holidays); });
-      S[kind] = map; got[kind] = true;
-      if (got.sheets && got.rows && got.trackers && !S.ready) { clearTimeout(timer); S.ready = true; setSync("ok", "Live · all changes saved"); offerLegacyCopy(BASE); }
+      normalizeKind(kind, map); S[kind] = map; got[kind] = true;
+      if (got.sheets && got.rows && got.trackers && !S.ready) { clearTimeout(timer); S.ready = true; setSync("ok", "Live · all changes saved"); offerLegacyCopy(BASE); startShares(); }
       if (S.sheetId && !S.sheets[S.sheetId] && got.sheets) { S.view = "home"; S.sheetId = null; }
       if (!drawerOpen() && !CP && !CM && !gridHasFocus() && $("#dlg").hidden && $("#modal").hidden) soon(); else renderNav();
     }, err => { clearTimeout(timer); setSync("offline", err.code === "PERMISSION_DENIED" ? "No access · check database rules" : "Sync stopped: " + err.message); S.ready = true; render(); if (err.code === "PERMISSION_DENIED") toast("Your account can't open its data. Publish the database rules from README step 1.3 (private per user)."); });
@@ -1217,7 +1369,7 @@ function renderNav() {
   $("#trkMark").textContent = ct ? (ct.short || shortOf(ct.name)) : "+";
   $("#trkMark").style.background = ct ? trackerColor(ct) : ""; $("#trkMark").style.color = ct ? "#fff" : "";
   $("#trkPop").innerHTML = trackerList().map(t => `<button type="button" data-trk="${esc(t.id)}"><span class="mini" style="background:${trackerColor(t)}">${esc(t.short || shortOf(t.name))}</span><span>${esc(t.name)}</span><span class="sub">${sheetList(t.id).length} sheets</span></button>`).join("") +
-    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="import">Add sheets to ${esc(ct.name)} from Excel…</button><button type="button" data-act="workflow">Status workflow for ${esc(ct.name)}…</button><button type="button" data-act="people">People & owners for ${esc(ct.name)} (${peopleOf(ct.id).people.length})…</button><button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
+    `<hr><button type="button" class="add" data-act="newtracker">+ New tracker (another bank)</button><button type="button" data-act="backup">Backup &amp; restore…</button>${ct ? `<button type="button" data-act="share">Share sheets from ${esc(ct.name)}…</button><button type="button" data-act="import">Add sheets to ${esc(ct.name)} from Excel…</button><button type="button" data-act="workflow">Status workflow for ${esc(ct.name)}…</button><button type="button" data-act="people">People & owners for ${esc(ct.name)} (${peopleOf(ct.id).people.length})…</button><button type="button" data-act="holidays">Holiday calendar for ${esc(ct.name)} (${(S.trackers[ct.id]?.holidays || []).length})…</button><button type="button" data-act="edittracker">Rename or delete ${esc(ct.name)}…</button>` : ""}`;
   $("#navHome").innerHTML = "";
   $("#nav").innerHTML = sheetList().map((s, i) => `<button type="button" data-sheet="${esc(s.id)}" aria-current="${S.view === "sheet" && S.sheetId === s.id}"><span class="dot" style="background:${SWATCH[i % SWATCH.length]}"></span><span class="nm">${esc(s.name)}</span><span class="ct">${rowsOf(s.id).length}</span></button>`).join("");
 }
@@ -1245,6 +1397,7 @@ function topbar(crumb) {
     <button class="cmdk-btn" type="button" data-act="cmdk" title="Search everything (Ctrl+K)" aria-label="Search everything">${ICON.search}<span class="cl">Search entries, sheets, actions…</span><span class="kbd">Ctrl K</span></button>
     <div class="tgroup" role="group" aria-label="Tools">
     ${AI_ON ? `<button class="tbtn aibtn" type="button" data-act="ai" data-tip="AI assistant" aria-label="AI assistant">${ICON.spark}<span class="bl">AI</span></button>` : ""}
+    <button class="tbtn" type="button" data-act="share" data-tip="Share sheets (view-only link)" aria-label="Share">${SHARE_ICON}</button>
     <button class="tbtn" type="button" data-act="theme" data-tip="Theme &amp; appearance" aria-label="Theme">${ICON.palette}</button>
     <button class="tbtn" type="button" data-act="import" data-tip="Import Excel" aria-label="Import Excel">${ICON.ul}</button>
     <button class="tbtn" type="button" data-act="fullscreen" data-tip="${S.full ? "Exit full screen (F)" : "Full screen (F)"}" aria-label="${S.full ? "Exit full screen" : "Full screen"}">${S.full ? ICON.shrink : ICON.expand}</button></div>
@@ -1571,7 +1724,7 @@ function renderSheet(main) {
     <button class="btn" type="button" data-act="addcol" title="Add column" aria-label="Add column">${ICON.plus}<span class="bl">Column</span></button>
     <button class="btn primary" type="button" data-act="add">${ICON.plus} Add entry <span class="kbd">N</span></button>
     <div class="menu"><button class="btn ghost" type="button" data-act="sheetmenu" aria-haspopup="true" aria-label="Sheet options" title="Sheet options">${ICON.dots}</button><div class="menu-pop" id="sheetMenu" hidden>
-      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="cardset">Card heading & fields…</button><button type="button" data-act="statusset">Status column…</button><button type="button" data-act="workflow">Status workflow…</button><button type="button" data-act="assignset">Assignee & owner…</button><button type="button" data-act="people">People & owners…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
+      <button type="button" data-act="addcol">Add a column</button><button type="button" data-act="addaging">Add an aging column</button><button type="button" data-act="noteedit">${sh.note ? "Edit note" : "Add a note"}</button><button type="button" data-act="editsheet">Rename sheet / edit columns</button><button type="button" data-act="paste">Paste rows from Excel…</button><button type="button" data-act="remarkset">Remark column…</button><button type="button" data-act="share">Share sheets (view-only link)…</button><button type="button" data-act="cardset">Card heading & fields…</button><button type="button" data-act="statusset">Status column…</button><button type="button" data-act="workflow">Status workflow…</button><button type="button" data-act="assignset">Assignee & owner…</button><button type="button" data-act="people">People & owners…</button><button type="button" data-act="splitsec">Split into sections (by headings)</button><button type="button" data-act="xlupdate">Upload edited Excel…</button><button type="button" data-act="holidays">Holiday calendar…</button><button type="button" data-act="dupsheet">Duplicate sheet structure</button><button type="button" data-act="exportone">Download this sheet</button><button type="button" class="red" data-act="delsheet">Delete sheet…</button></div></div>
   </div>
   ${flist.length ? `<div class="fbar">${flist.map((f, i) => `<span class="fchip"><button type="button" data-fedit="${i}" title="Edit filter">${esc(filterLabel(sh, f))}</button><button type="button" class="x" data-fdel="${i}" aria-label="Remove filter">✕</button></span>`).join("")}<button class="stamp" type="button" data-act="filter">+ Add filter</button></div>` : ""}
   ${(S.q || fActive) && all.length ? `<div class="banner">Showing ${rows.length} of ${all.length} entries. <button class="stamp" type="button" data-act="clear">Clear search &amp; filters</button></div>` : ""}
@@ -3435,6 +3588,7 @@ document.addEventListener("click", e => {
     case "import": $("#fileIn").click(); break;
     case "importx": closeModal(); $("#fileIn").click(); break;
     case "cmdk": openCmdk(); break;
+    case "share": openShares(); break;
     case "keys": openKeys(); break;
     case "export": openExport(S.view === "sheet" ? "sheet" : "tracker"); break;
     case "exportone": openExport("sheet"); break;
@@ -3515,7 +3669,7 @@ function ckActions() {
     inSheet && ["New entry", "add", "N"], ["New sheet", "newsheet"], ["Import sheets from Excel", "import"], ["Download Excel", "export"],
     inSheet && ["Filter this sheet", "filter"], inSheet && ["Format table", "fmt"], ["Theme & appearance", "theme"], ["Full screen", "fullscreen", "F"],
     ct && [`Status workflow for ${ct.name}`, "workflow"], ct && [`People & owners for ${ct.name}`, "people"], ct && [`Holiday calendar for ${ct.name}`, "holidays"],
-    ["New tracker (another bank)", "newtracker"], ["Keyboard shortcuts", "keys", "?"], AI_ON && ["Ask AI", "ai"]
+    ["Share sheets (view-only link)", "share"], ["New tracker (another bank)", "newtracker"], ["Keyboard shortcuts", "keys", "?"], AI_ON && ["Ask AI", "ai"]
   ].filter(Boolean).map(([label, act, k]) => ({kind: "act", label, act, k}));
 }
 function openCmdk() {
