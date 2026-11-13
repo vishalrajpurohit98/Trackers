@@ -2160,6 +2160,7 @@ $("#mBody").addEventListener("input", e => {
 $("#mBody").addEventListener("change", e => { if (e.target.dataset.ck) { const row = e.target.closest(".colrow"), i = +row.dataset.i; if (e.target.dataset.ck === "kind") { M.cols[i].calc = {kind: e.target.value}; renderModal(); } else M.cols[i].calc = readCalc(row) || {...(M.cols[i].calc || {}), [e.target.dataset.ck]: e.target.value}; return; } if (e.target.dataset.k === "type") { const i = +e.target.closest(".colrow").dataset.i; M.cols[i].type = e.target.value; renderModal(); } });
 $("#mBody").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.act === "importx") { closeModal(); $("#fileIn").click(); return; }
   if (b.dataset.tpl) { M.tpl = b.dataset.tpl; M.cols = tplCols(b.dataset.tpl); if (!M.name || Object.values(TEMPLATES).some(t => t.name === M.name)) M.name = TEMPLATES[b.dataset.tpl].name === "Blank" ? "" : TEMPLATES[b.dataset.tpl].name; renderModal(); return; }
   const row = b.closest(".colrow"), i = row ? +row.dataset.i : -1;
   if (b.dataset.mv) { const j = i + +b.dataset.mv; if (j >= 0 && j < M.cols.length) { [M.cols[i], M.cols[j]] = [M.cols[j], M.cols[i]]; renderModal(); } }
