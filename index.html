@@ -670,6 +670,159 @@ th[draggable="true"] button{cursor:grab}
   .menu-pop{position:fixed;left:12px;right:12px;top:auto;bottom:12px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ================= UI refresh (v3) ================= */
+:root{--r-lg:18px;--r-md:12px;--r-sm:9px;--ring:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent);
+  --shadow-1:0 1px 1px rgba(16,35,31,.04),0 2px 6px rgba(16,35,31,.05);--shadow-2:0 2px 4px rgba(16,35,31,.05),0 12px 32px rgba(16,35,31,.10);--shadow-3:0 24px 64px rgba(6,20,17,.28)}
+body{background:radial-gradient(1200px 500px at 85% -120px,color-mix(in srgb,var(--accent) 7%,transparent),transparent 70%),var(--bg);background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.main{gap:18px}
+/* top bar */
+.topbar{gap:10px;flex-wrap:nowrap;min-height:44px}
+.crumb{display:flex;align-items:center;gap:8px;font-size:14px;flex:1;min-width:0}
+.crumb b{font-family:var(--f-display);font-size:20px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-proj{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 8px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;flex:none}
+.cr-proj i{width:9px;height:9px;border-radius:3px}
+.cr-sep{color:var(--line);font-size:18px}
+.cmdk-btn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;height:40px;padding:0 10px 0 12px;min-width:min(320px,30vw);border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:13.5px;box-shadow:var(--shadow-1);transition:border-color .15s,box-shadow .15s}
+.cmdk-btn:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.cmdk-btn:focus-visible{box-shadow:var(--ring);border-color:var(--accent)}
+.cmdk-btn svg{width:16px;height:16px;flex:none}
+.cmdk-btn .cl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmdk-btn .kbd{background:var(--surface-2);opacity:1}
+.tgroup{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
+.tbtn{all:unset;cursor:pointer;position:relative;display:inline-flex;align-items:center;gap:6px;height:32px;min-width:32px;padding:0 8px;box-sizing:border-box;justify-content:center;border-radius:8px;color:var(--ink);font-size:13px;font-weight:700}
+.tbtn:hover{background:var(--surface-2)}
+.tbtn:focus-visible{box-shadow:var(--ring)}
+.tbtn svg{width:17px;height:17px}
+.tbtn.aibtn{color:var(--accent)}
+.tbtn[data-tip]:hover::after,.tbtn[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:5px 9px;border-radius:7px;white-space:nowrap;z-index:60;pointer-events:none}
+.dlbtn{height:40px;box-shadow:var(--shadow-1)}
+/* buttons & inputs */
+.btn{border-radius:var(--r-sm);height:40px;padding:0 14px;box-shadow:var(--shadow-1)}
+.btn.ghost{box-shadow:none}
+.btn.primary{box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 4px 14px color-mix(in srgb,var(--accent) 30%,transparent)}
+.btn.primary:hover{filter:brightness(1.05)}
+.dr-foot .btn,.dlg-foot .btn{height:auto;min-height:40px}
+.inp:focus{box-shadow:var(--ring)!important;border-color:var(--accent)!important}
+/* tabs */
+.tabs{gap:2px;border-bottom:0;margin-top:-4px;padding:4px;background:color-mix(in srgb,var(--surface-2) 70%,transparent);border-radius:14px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border-bottom:0;border-radius:10px;padding:7px 13px;font-size:13.5px;transition:background .15s,color .15s}
+.tab:hover{background:color-mix(in srgb,var(--surface) 60%,transparent)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1),inset 0 -2px 0 var(--accent)}
+.tab .ct{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+/* toolbar */
+.toolbar{background:linear-gradient(var(--bg) 70%,transparent);padding-block:10px;gap:8px}
+.search{border-radius:var(--r-md);height:40px;box-shadow:var(--shadow-1)}
+.search:focus-within{box-shadow:var(--ring)}
+.seg{border-radius:var(--r-md);padding:3px;height:40px;box-sizing:border-box;align-items:center}
+.seg button{padding:6px 14px}
+/* sidebar */
+.side{gap:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--side) 92%,var(--accent)) 0%,var(--side) 38%)}
+.nav button{padding:8px 10px;transition:background .12s}
+.nav button[aria-current="true"]{background:color-mix(in srgb,var(--accent) 22%,var(--side));box-shadow:inset 3px 0 0 var(--accent)}
+.side-add{border-style:solid;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
+.keysbtn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--side-muted);padding:4px 2px;border-radius:6px}
+.keysbtn:hover{color:var(--side-ink)}
+.keysbtn .kbd{background:rgba(255,255,255,.1);color:var(--side-ink)}
+/* table */
+.tablewrap{border-radius:var(--r-lg);box-shadow:var(--shadow-2);border-color:color-mix(in srgb,var(--line) 80%,transparent)}
+.tablewrap:not([data-head="bold"]) th{background:color-mix(in srgb,var(--surface-2) 75%,var(--surface));backdrop-filter:blur(6px);font-size:11.5px;letter-spacing:.08em;color:var(--muted)}
+.tablewrap td{border-bottom-color:color-mix(in srgb,var(--line) 65%,transparent);transition:background .12s}
+.tablewrap[data-hover="1"] tbody tr:not(.addrow):hover td,.tablewrap:not([data-hover]) tbody tr:not(.addrow):hover td{background:color-mix(in srgb,var(--accent-soft) 38%,var(--surface))}
+.tablewrap tbody tr:not(.addrow):hover td.c-flag{box-shadow:inset 3px 0 0 var(--accent)}
+.tablewrap td.c-calc .pill,.tablewrap td .pill{font-family:var(--f-body);font-size:12px}
+.tablewrap td.c-calc{font-family:var(--f-body)}
+.pill{padding:3px 10px 3px 9px;letter-spacing:.005em}
+tr.flash td{animation:flash 1.6s ease}
+@keyframes flash{0%,30%{background:color-mix(in srgb,var(--amber) 35%,var(--surface))}}
+.tablewrap tr.addrow button{opacity:.75}
+.tablewrap tr.addrow button:hover{opacity:1}
+/* avatars */
+.av{--h:160;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.02em;color:hsl(var(--h) 55% 28%);background:hsl(var(--h) 60% 88%);box-shadow:0 0 0 2px var(--surface);flex:none}
+:root[data-theme="dark"] .av{color:hsl(var(--h) 70% 85%);background:hsl(var(--h) 35% 26%)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .av{color:hsl(var(--h) 70% 85%);background:hsl(var(--h) 35% 26%)}}
+.av.more{--h:200;font-size:10px}
+.avs{display:inline-flex}.avs .av+.av{margin-left:-7px}
+.avlist{display:flex;flex-wrap:wrap;gap:4px 6px}
+.avchip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 2px;border-radius:99px;background:var(--surface-2);font-size:13px;font-weight:600;white-space:nowrap}
+.avchip .av{width:22px;height:22px;font-size:9.5px;box-shadow:none}
+/* cards */
+.cards{gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.card{border-radius:var(--r-lg);padding:18px 18px 14px 20px;gap:10px;box-shadow:var(--shadow-1);position:relative;overflow:hidden;border-color:color-mix(in srgb,var(--line) 85%,transparent)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cat,var(--line));opacity:.85}
+.card:hover{box-shadow:var(--shadow-2);transform:translateY(-3px)}
+.card h3{font-size:17px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.cstage{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cstage-n{font-size:11.5px;color:var(--muted);font-weight:700;font-family:var(--f-mono)}
+.stagebar{height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:-2px}
+.stagebar i{display:block;height:100%;border-radius:inherit;background:currentColor}
+.stagebar i.t-good{color:var(--good)}.stagebar i.t-warn{color:var(--warn)}.stagebar i.t-bad{color:var(--bad)}.stagebar i.t-info{color:var(--info)}.stagebar i.t-neu{color:var(--neu)}
+.card dl{gap:7px}
+.card dt{font-size:10.5px}
+.card dd{font-size:13.5px;color:color-mix(in srgb,var(--ink) 88%,var(--muted))}
+.card dd .clamp{-webkit-line-clamp:3}
+.cfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:10px;border-top:1px dashed color-mix(in srgb,var(--line) 80%,transparent)}
+.cfoot .when{margin-left:auto;font-size:11.5px}
+.cfoot .pill{font-size:11.5px}
+.card.imp,.card.breach{box-shadow:var(--shadow-1)}
+.card.imp::before,.card.breach::before{background:var(--bad);width:5px;opacity:1}
+.cardbar{margin:0}
+/* drawer */
+.drawer{width:min(760px,100%);background:var(--surface)}
+.dr-head{padding:22px 28px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 6%,var(--surface)),var(--surface))}
+.dr-head h2{font-size:22px;padding-right:36px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+#drForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 18px;grid-auto-flow:row dense;align-content:start;padding:22px 28px 32px;background:var(--bg)}
+#drForm>*{grid-column:1/-1}
+#drForm>.field.half{grid-column:span 1}
+#drForm .field{background:var(--surface);border:1px solid color-mix(in srgb,var(--line) 75%,transparent);border-radius:14px;padding:12px 14px 14px;gap:8px;transition:border-color .15s,box-shadow .15s}
+#drForm .field:focus-within{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:var(--ring)}
+#drForm .field .typ{opacity:0;transition:opacity .15s}
+#drForm .field:hover .typ,#drForm .field:focus-within .typ{opacity:1}
+#drForm .field .inp{background:var(--bg)}
+#drForm .field.filled .inp{border-color:var(--line)}
+#drForm .calcbox{background:var(--bg)}
+.dr-foot{padding:14px 28px}
+/* dialogs & modal */
+.modal{background:rgba(6,20,17,.38);backdrop-filter:blur(6px) saturate(1.1)}
+#dlg>*:first-child,.modal>*:first-child{box-shadow:var(--shadow-3);border-radius:20px}
+/* command palette */
+.cmdk{position:fixed;inset:0;z-index:70;display:flex;justify-content:center;align-items:flex-start;padding:min(12vh,110px) 16px 16px;background:rgba(6,20,17,.38);backdrop-filter:blur(6px)}
+.cmdk-box{width:min(680px,100%);max-height:min(72vh,640px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-3);overflow:hidden;animation:ckin .14s ease-out}
+@keyframes ckin{from{transform:translateY(-6px) scale(.985);opacity:0}}
+.cmdk-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.cmdk-in svg{width:18px;height:18px;color:var(--muted);flex:none}
+.cmdk-in input#cmdkIn{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:17px;padding:4px 0}
+.cmdk-all{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.cmdk-list{overflow:auto;padding:6px 8px 10px;flex:1}
+.ck-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;padding:10px 10px 4px}
+.ck-it{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:12px;align-items:flex-start;width:100%;padding:9px 10px;border-radius:10px}
+.ck-it[aria-selected="true"]{background:var(--accent-soft)}
+.ck-ic{width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;flex:none;color:var(--muted);font-weight:700}
+.ck-ic svg{width:13px;height:13px}.ck-ic .dot{width:10px;height:10px;border-radius:3px}
+.ck-main{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ck-main b{font-weight:650;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck-main small{font-size:12px;color:var(--muted);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.ck-main small .pill{font-size:11px;padding:1px 8px}
+.ck-snip{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.ck-it mark{background:color-mix(in srgb,var(--amber) 40%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.ck-empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px}
+.cmdk-foot{display:flex;gap:16px;padding:9px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);background:var(--surface-2)}
+.cmdk-foot .kbd{background:var(--surface);margin-right:3px}
+.keys{display:flex;flex-direction:column;gap:2px}
+.keyrow{display:flex;justify-content:space-between;gap:16px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.keyrow .kbd{background:var(--surface-2);font-size:12px;padding:2px 7px}
+@media (max-width:1100px){.cmdk-btn{min-width:0;width:40px;padding:0;justify-content:center}.cmdk-btn .cl,.cmdk-btn .kbd{display:none}}
+@media (max-width:760px){
+  .tgroup .tbtn:not(.aibtn){display:none}.tgroup:not(:has(.aibtn)){display:none}
+  .tgroup{padding:2px;box-shadow:none}.tbtn{min-width:30px;padding:0 6px}.dlbtn{width:40px;padding:0;justify-content:center}
+  .crumb .cr-proj,.crumb .cr-sep{display:none}.crumb b{font-size:17px}
+  #drForm{grid-template-columns:1fr;padding:16px}#drForm>.field.half{grid-column:1/-1}
+  .dr-head{padding:18px 18px 14px}.dr-foot{padding:12px 16px}
+  .cmdk{padding:10px}.cmdk-box{max-height:calc(100vh - 20px - var(--kb,0px))}.cmdk-foot{display:none}
+  .tbtn[data-tip]::after{display:none!important}
+}
+@media (hover:none){.cmdk-btn .kbd{display:none}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <script>
@@ -715,7 +868,7 @@ window.AI_FEATURES = true;
       <span class="sync" id="sync" data-s="local"><i></i><span id="syncTxt">Connecting…</span></span>
       <span class="userchip" id="userChip" hidden><span id="userEmail"></span><button type="button" id="signOutBtn">Sign out</button></span>
       <button class="side-add" type="button" data-act="theme" style="margin:0;border-style:solid;font-weight:600"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.1-4-7.5-9-7.5Z"/></svg> Theme &amp; appearance</button>
-      <span>Keys: <span class="kbd">N</span> new entry · <span class="kbd">/</span> search · <span class="kbd">[</span> hide menu · <span class="kbd">F</span> full screen · <span class="kbd">Alt</span>+<span class="kbd">→</span> next sheet · <span class="kbd">Ctrl</span>+<span class="kbd">Z</span> undo · <span class="kbd">Ctrl</span>+<span class="kbd">V</span> paste rows</span>
+      <button type="button" class="keysbtn" data-act="keys"><span class="kbd">?</span> Keyboard shortcuts</button>
     </div>
   </aside>
   <main class="main" id="main"></main>
@@ -1005,11 +1158,13 @@ function render() {
 }
 function topbar(crumb) {
   return `<div class="topbar"><button class="btn ghost sidetog" type="button" data-act="toggleside" aria-pressed="${!S.noside}" title="Menu (press [ )" aria-label="Menu">${ICON.side}</button><div class="crumb">${crumb}</div>
-    ${AI_ON ? `<button class="btn ghost aibtn" type="button" data-act="ai" title="Ask AI, status email, summaries" aria-label="AI assistant">${ICON.spark}<span class="bl">AI</span></button>` : ""}
-    <button class="btn ghost" type="button" data-act="theme" title="Theme &amp; appearance" aria-label="Theme">${ICON.palette}<span class="bl">Theme</span></button>
-    <button class="btn ghost" type="button" data-act="import" title="Import Excel" aria-label="Import Excel">${ICON.ul}<span class="bl">Import Excel</span></button>
-    <button class="btn ghost" type="button" data-act="fullscreen" title="${S.full ? "Exit full screen (F)" : "Full screen (F)"}">${S.full ? ICON.shrink : ICON.expand}<span class="bl">${S.full ? "Exit full screen" : "Full screen"}</span></button>
-    <button class="btn" type="button" data-act="export" title="Download" aria-label="Download">${ICON.dl}<span class="bl">Download</span></button></div>${tabsHTML()}`;
+    <button class="cmdk-btn" type="button" data-act="cmdk" title="Search everything (Ctrl+K)" aria-label="Search everything">${ICON.search}<span class="cl">Search entries, sheets, actions…</span><span class="kbd">Ctrl K</span></button>
+    <div class="tgroup" role="group" aria-label="Tools">
+    ${AI_ON ? `<button class="tbtn aibtn" type="button" data-act="ai" data-tip="AI assistant" aria-label="AI assistant">${ICON.spark}<span class="bl">AI</span></button>` : ""}
+    <button class="tbtn" type="button" data-act="theme" data-tip="Theme &amp; appearance" aria-label="Theme">${ICON.palette}</button>
+    <button class="tbtn" type="button" data-act="import" data-tip="Import Excel" aria-label="Import Excel">${ICON.ul}</button>
+    <button class="tbtn" type="button" data-act="fullscreen" data-tip="${S.full ? "Exit full screen (F)" : "Full screen (F)"}" aria-label="${S.full ? "Exit full screen" : "Full screen"}">${S.full ? ICON.shrink : ICON.expand}</button></div>
+    <button class="btn dlbtn" type="button" data-act="export" title="Download Excel" aria-label="Download">${ICON.dl}<span class="bl">Download</span></button></div>${tabsHTML()}`;
 }
 function tabsHTML() {
   const ct = curTracker(); if (!ct) return "";
@@ -1148,7 +1303,15 @@ function calcDesc(sh, c) {
 }
 /* raw value of any column for search / sort / filter / export */
 function valOf(sh, c, r) { if (c.type === "calc") return calcCell(sh, c, r); const v = (r.cells || {})[c.id] ?? ""; return {n: c.type === "number" ? (parseFloat(v) || (v === "" ? null : 0)) : null, text: v}; }
+function avHue(n) { let h = 0; for (const ch of String(n)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; }
+function initials(n) { const w = String(n).trim().split(/\s+/).filter(Boolean); return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : (w[0] || "")[1] || "")).toUpperCase(); }
+function avatarsHTML(v, withNames) {
+  const ns = splitNames(v); if (!ns.length) return `<span class="empty-cell">—</span>`;
+  if (!withNames) return `<span class="avs" title="${esc(ns.join(", "))}">${ns.slice(0, 4).map(n => `<i class="av" style="--h:${avHue(n)}">${esc(initials(n))}</i>`).join("")}${ns.length > 4 ? `<i class="av more">+${ns.length - 4}</i>` : ""}</span>`;
+  return `<span class="avlist">${ns.map(n => `<span class="avchip"><i class="av" style="--h:${avHue(n)}">${esc(initials(n))}</i>${esc(n)}</span>`).join("")}</span>`;
+}
 function cellOut(sh, c, r, st) {
+  if (c.id === sh.assigneeCol && c.type !== "calc") { const v = (r.cells || {})[c.id]; return v ? avatarsHTML(v, true) : `<span class="empty-cell">—</span>`; }
   if (c.type === "date" && st && st.breach && st.etaCols.has(c.id)) { const v = (r.cells || {})[c.id]; return `<span class="eta-late">${esc(fmtDateV(v))}<small>ETA crossed</small></span>`; }
   if (c.type === "calc") { const x = calcCell(sh, c, r); if (!x.text) return `<span class="empty-cell">—</span>`; return x.t === "plain" ? esc(x.text) : `<span class="pill t-${x.t}">${esc(x.text)}</span>`; }
   return cellHTML(c, (r.cells || {})[c.id]);
@@ -1294,8 +1457,13 @@ function renderSheet(main) {
   else if (!rows.length && all.length) body = `<div class="emptystate"><h3>Nothing matches</h3><p>Try a different search or clear the filters.</p><button class="btn" type="button" data-act="clear">Clear search &amp; filters</button></div>`;
   else if (layout === "cards") body = `<div class="cardbar"><button type="button" class="btn ghost" data-act="cardset" title="Choose the column used as each card's heading">Card heading: <b>${esc(tc?.label || "—")}</b>${sh.titleCol ? "" : " <span class=\"hint\">(automatic)</span>"} ▾</button></div><div class="cards">${rows.map(r => {
       const c = r.cells || {}, st = states.get(r.id), rest = vcols.filter(x => x !== tc && x !== sc && c[x.id]);
-      const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && c[x.id]).slice(0, 4).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("") + cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(x.label)}: ${esc(v.text)}</span>` : ""; }).join("");
-      return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${pills ? `<div class="meta">${pills}</div>` : ""}<dl>${(Array.isArray(sh.cardFields) ? sh.cardFields.map(id => vcols.find(x => x.id === id)).filter(x => x && x !== tc && c[x.id] && x.type !== "calc") : rest.filter(x => x.type !== "select").slice(0, 3)).map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl><span class="when">Updated ${esc(ago(r.updatedAt))}</span></button>`;
+      const sv = sc && c[sc.id], sm = sv ? STATUS_META.get(String(sv).trim().toLowerCase()) : null, cat = sm ? (STATUS_CATS[sm.cat] || {}) : null;
+      const ac = (sh.columns || []).find(x => x.id === sh.assigneeCol);
+      const pills = (st.imp ? `<span class="pill t-bad">Important</span>` : "") + cols.filter(x => x.type === "select" && x !== sc && x !== ac && c[x.id]).slice(0, 3).map(x => `<span class="pill t-${tone(c[x.id])}" title="${esc(x.label)}">${esc(c[x.id])}</span>`).join("");
+      const calcs = cols.filter(x => x.type === "calc" && x.calc?.kind !== "serial").map(x => { const v = calcCell(sh, x, r); return v.text ? `<span class="pill t-${v.t === "plain" ? "neu" : v.t}" title="${esc(x.label)}">${esc(v.text)}</span>` : ""; }).join("");
+      const fields = (Array.isArray(sh.cardFields) ? sh.cardFields.map(id => vcols.find(x => x.id === id)).filter(x => x && x !== tc && c[x.id] && x.type !== "calc") : rest.filter(x => x.type !== "select" && x !== ac).slice(0, 3));
+      const stage = sv ? `<div class="cstage"><span class="pill t-${tone(sv)}">${esc(sv)}</span>${sm ? `<span class="cstage-n">Stage ${sm.i}/${sm.n}</span>` : ""}</div>${sm ? `<div class="stagebar" title="${esc(cat?.label || "")}"><i class="t-${cat?.tone || "neu"}" style="width:${Math.max(4, Math.round(sm.i / sm.n * 100))}%"></i></div>` : ""}` : "";
+      return `<button class="card ${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""}" style="--cat:var(--${(cat?.tone || (sv ? tone(sv) : "line")) === "line" ? "line" : (cat?.tone || tone(sv))})" type="button" data-open="${esc(r.id)}"><h3>${esc(c[tc?.id] || "Untitled entry")}</h3>${stage}${pills ? `<div class="meta">${pills}</div>` : ""}${fields.length ? `<dl>${fields.map(x => `<div><dt>${esc(x.label)}</dt><dd>${x.type === "date" ? esc(fmtDate(c[x.id])) : `<div class="clamp">${esc(c[x.id])}</div>`}</dd></div>`).join("")}</dl>` : ""}<div class="cfoot">${ac && c[ac.id] ? avatarsHTML(c[ac.id]) : ""}${calcs}<span class="when">${esc(ago(r.updatedAt))}</span></div></button>`;
     }).join("")}</div>`;
   else body = `<div class="tablewrap" data-grid="${F.grid}" data-stripe="${F.stripe ? 1 : 0}" data-head="${F.head}" data-wrap="${F.lines}" data-freeze="${F.freeze ? 1 : 0}" data-valign="${F.valign}" data-hcase="${F.hcase}" data-pad="${F.pad}" data-pill="${F.pill}" data-boldfirst="${F.boldFirst ? 1 : 0}" data-hover="${F.hover ? 1 : 0}" data-border="${F.border}" style="--tfs:${({s: 13, m: 14, l: 16})[F.size] || 14}px;--rowh:${F.rowh}px;--lines:${F.lines === "all" ? 999 : F.lines}"><table><thead><tr><th class="c-flag" title="Select · flag · open"><span class="rowacts"><input type="checkbox" class="rowck" id="ckAll" aria-label="Select all shown rows" ${rows.length && rows.every(r => S.sel.has(r.id)) ? "checked" : ""}>${ICON.flag}</span></th>${vcols.map(c => { const s = S.sort && S.sort.sheet === sh.id && S.sort.col === c.id ? (S.sort.dir > 0 ? " ↑" : " ↓") : ""; const hasF = flist.some(f => f.col === c.id); return `<th draggable="true" data-dragcol="${esc(c.id)}"${wst(c, true)}><button type="button" class="colh" data-colmenu="${esc(c.id)}" title="${esc(c.type === "calc" ? calcDesc(sh, c) : "Rename, sort, filter, move")}">${esc(c.label)}${c.type === "calc" ? ' <span class="fx">fx</span>' : ""}${c.id === sh.remarkCol ? ' <span class="fx" title="Remark column">✎</span>' : ""}${c.id === sh.assigneeCol ? ' <span class="fx" title="Assignee column">@</span>' : ""}${c.id === sh.statusCol ? ' <span class="fx" title="Status workflow column">◉</span>' : ""}${c.id === sh.titleCol ? ' <span class="fx" title="Card heading column">H</span>' : ""}${c.id === sh.ownerCol && sh.assigneeCol ? ' <span class="fx" title="Filled from assignee">auto</span>' : ""}${hasF ? ` <span class="fx" style="color:var(--warn)">F</span>` : ""}${s}<span class="chev">▾</span></button><span class="rsz" data-rsz="${esc(c.id)}" title="Drag to resize · double-click to reset"></span></th>`; }).join("")}<th class="addcol"><button type="button" data-act="addcolq" title="Add a column">${ICON.plus} Column</button></th></tr></thead>
       <tbody>${rows.map(r => { const st = states.get(r.id); return `<tr tabindex="0" class="${st.imp ? "imp" : ""} ${st.breach ? "breach" : ""} ${S.sel.has(r.id) ? "sel" : ""}" data-row="${esc(r.id)}" id="row-${esc(r.id)}"><td class="c-flag"><span class="rowacts"><input type="checkbox" class="rowck" data-selrow="${esc(r.id)}" aria-label="Select row" ${S.sel.has(r.id) ? "checked" : ""}><button type="button" class="flag" data-imp="${esc(r.id)}" aria-pressed="${st.imp}" title="${st.imp ? "Remove important mark" : "Mark as important"}">${ICON.flag}</button><button type="button" class="flag open" data-open="${esc(r.id)}" title="Open full entry">${ICON.expand}</button></span></td>${vcols.map(c => `<td class="c-${c.type} ${ccls(c)} ${c.type === "calc" ? "" : "editable"} ${c.id === sh.remarkCol ? "rmk" : ""}" data-cell="${esc(c.id)}"${wst(c)} title="${c.type === "calc" ? esc("Calculated: " + calcDesc(sh, c)) : c.id === sh.remarkCol ? "Click to add an update" : "Click to edit"}">${c.id === sh.remarkCol && AI_ON && (r.cells || {})[c.id] ? `<button type="button" class="rmk-ai" data-rmksum title="AI summary">${ICON.spark}</button>` : ""}${cellOut(sh, c, r, st)}</td>`).join("")}<td></td></tr>`; }).join("")}<tr class="addrow"><td colspan="${vcols.length + 2}"><button type="button" data-act="addrow">${ICON.plus} Add row</button>${vp.hidden.length ? `<button type="button" data-act="fmt" class="hidnote">${vp.hidden.length} hidden column${vp.hidden.length === 1 ? "" : "s"} · show</button>` : ""}</td></tr></tbody></table></div>`;
@@ -1308,7 +1476,7 @@ function renderSheet(main) {
       <button class="btn ${S.onlyRed[sh.id] ? "on" : ""}" type="button" data-act="onlyred">${S.onlyRed[sh.id] ? "Show all entries" : "Show only these"}</button>
       ${unflagged.length ? `<button class="btn" type="button" data-act="markred">${ICON.flag} Mark ${unflagged.length === breached.length ? "all" : unflagged.length} as important</button>` : ""}</div>` : "";
 
-  main.innerHTML = topbar(`<span style="color:${trackerColor(curTracker())}">●</span> <span style="padding:2px 4px">${esc(curTracker()?.name || "")}</span> / <b>${esc(sh.name)}</b>`) + `
+  main.innerHTML = topbar(`<span class="cr-proj"><i style="background:${trackerColor(curTracker())}"></i>${esc(curTracker()?.name || "")}</span><span class="cr-sep">/</span><b>${esc(sh.name)}</b>`) + `
   ${noteHTML}
   ${alertHTML}
   <div class="toolbar">
@@ -2006,7 +2174,7 @@ function openDrawer(sheetId, rowId, preset) {
   f.innerHTML = cols.map(c => {
     const v = cells[c.id] ?? "", id = `f_${c.id}`;
     let ctl;
-    if (c.type === "calc") return `<div class="field" data-calc="${esc(c.id)}"><div class="lbl"><span>${esc(c.label)} <span class="typ">Auto-calculated</span></span></div><div class="calcbox"><span class="cv"></span><small>${esc(calcDesc(sh, c))}</small></div></div>`;
+    if (c.type === "calc") return `<div class="field half" data-calc="${esc(c.id)}"><div class="lbl"><span>${esc(c.label)} <span class="typ">Auto-calculated</span></span></div><div class="calcbox"><span class="cv"></span><small>${esc(calcDesc(sh, c))}</small></div></div>`;
     if (c.type === "long") ctl = `<textarea class="inp" id="${id}" data-col="${esc(c.id)}" rows="4" placeholder="Write the latest update…">${esc(v)}</textarea>`;
     else if (c.type === "date") ctl = `<input class="inp" type="date" id="${id}" data-col="${esc(c.id)}" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "")}">`;
     else if (c.type === "number") ctl = `<input class="inp" type="number" id="${id}" data-col="${esc(c.id)}" value="${esc(v)}" style="max-width:160px;font-family:var(--f-mono)">`;
@@ -2019,7 +2187,8 @@ function openDrawer(sheetId, rowId, preset) {
     const rmk = isRemark(sh, c);
     const stamp = rmk && AI_ON ? `<span><button type="button" class="stamp" data-aisum="${esc(c.id)}" title="AI summary of this field">${ICON.spark} Summarise</button></span>` : "";
     if (rmk) ctl = `<div class="rmkadd"><textarea class="inp" id="dr_rm_${esc(c.id)}" rows="2" placeholder="New update · added as ${esc(remarkStamp(sh))}"></textarea><div class="acts">${AI_ON ? `<button type="button" class="stamp" data-airw="rephrase" data-col="${esc(c.id)}">${ICON.spark} Rephrase</button><button type="button" class="stamp" data-airw="improve" data-col="${esc(c.id)}">${ICON.spark} Improve</button>` : ""}<span class="sp" style="flex:1"></span><button type="button" class="btn" data-rmadd="${esc(c.id)}">Add update</button></div></div>` + ctl;
-    return `<div class="field ${v ? "filled" : ""}" data-field="${esc(c.id)}"><div class="lbl"><label id="l_${esc(c.id)}" for="${id}">${esc(c.label)} <span class="typ">${esc(TYPES[c.type] || "")}</span></label>${stamp}</div>${ctl}</div>`;
+    const half = ["text", "date", "number"].includes(c.type) && !rmk && sh.assigneeCol !== c.id;
+    return `<div class="field ${v ? "filled" : ""} ${half ? "half" : ""}" data-type="${esc(c.type)}" data-field="${esc(c.id)}"><div class="lbl"><label id="l_${esc(c.id)}" for="${id}">${esc(c.label)} <span class="typ">${esc(TYPES[c.type] || "")}</span></label>${stamp}</div>${ctl}</div>`;
   }).join("") + (rowId && S.rows[rowId]?.updatedAt ? `<div class="hint">Last saved ${esc(ago(S.rows[rowId].updatedAt))}${S.rows[rowId].updatedBy ? ` by ${esc(S.rows[rowId].updatedBy)}` : ""}</div>` : "");
   f.querySelectorAll("textarea").forEach(autogrow);
   updateProgress();
@@ -3181,6 +3350,8 @@ document.addEventListener("click", e => {
     case "newsheet": openModal(null); break;
     case "import": $("#fileIn").click(); break;
     case "importx": closeModal(); $("#fileIn").click(); break;
+    case "cmdk": openCmdk(); break;
+    case "keys": openKeys(); break;
     case "export": openExport(S.view === "sheet" ? "sheet" : "tracker"); break;
     case "exportone": openExport("sheet"); break;
     case "addcol": openAddColumn(); break;
@@ -3250,6 +3421,71 @@ document.addEventListener("keydown", e => {
   if (S.view === "sheet" && e.altKey && (e.key === "ArrowRight" || e.key === "ArrowLeft")) { const l = sheetList(), i = l.findIndex(x => x.id === S.sheetId), n = l[(i + (e.key === "ArrowRight" ? 1 : -1) + l.length) % l.length]; if (n) { e.preventDefault(); S.sheetId = n.id; S.q = ""; render(); } }
   if (e.key === "/" && $("#q")) { e.preventDefault(); $("#q").focus(); }
 });
+
+/* ---------- Command palette (Ctrl+K) ---------- */
+let CK = null;
+function runAct(a) { const b = document.createElement("button"); b.type = "button"; b.dataset.act = a; b.hidden = true; document.body.append(b); b.click(); b.remove(); }
+function ckActions() {
+  const inSheet = S.view === "sheet" && S.sheets[S.sheetId], ct = curTracker();
+  return [
+    inSheet && ["New entry", "add", "N"], ["New sheet", "newsheet"], ["Import sheets from Excel", "import"], ["Download Excel", "export"],
+    inSheet && ["Filter this sheet", "filter"], inSheet && ["Format table", "fmt"], ["Theme & appearance", "theme"], ["Full screen", "fullscreen", "F"],
+    ct && [`Status workflow for ${ct.name}`, "workflow"], ct && [`People & owners for ${ct.name}`, "people"], ct && [`Holiday calendar for ${ct.name}`, "holidays"],
+    ["New tracker (another bank)", "newtracker"], ["Keyboard shortcuts", "keys", "?"], AI_ON && ["Ask AI", "ai"]
+  ].filter(Boolean).map(([label, act, k]) => ({kind: "act", label, act, k}));
+}
+function openCmdk() {
+  if (!$("#cmdk")) { const d = document.createElement("div"); d.id = "cmdk"; d.className = "cmdk"; d.hidden = true; d.innerHTML = `<div class="cmdk-box" role="dialog" aria-label="Search everything"><div class="cmdk-in">${ICON.search}<input id="cmdkIn" autocomplete="off" spellcheck="false"><label class="cmdk-all"><input type="checkbox" id="cmdkAll"> All projects</label></div><div class="cmdk-list" id="cmdkList" role="listbox"></div><div class="cmdk-foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span><span><span class="kbd">Enter</span> open</span><span><span class="kbd">Esc</span> close</span></div></div>`; document.body.append(d);
+    d.addEventListener("mousedown", e => { if (e.target === d) closeCmdk(); });
+    $("#cmdkIn").addEventListener("input", () => { CK.sel = 0; drawCmdk(); });
+    $("#cmdkAll").addEventListener("change", () => { CK.sel = 0; drawCmdk(); $("#cmdkIn").focus(); });
+    $("#cmdkIn").addEventListener("keydown", e => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const n = CK.items.length; if (n) { CK.sel = (CK.sel + (e.key === "ArrowDown" ? 1 : -1) + n) % n; paintSel(); } }
+      else if (e.key === "Enter") { e.preventDefault(); pickCmdk(CK.items[CK.sel]); }
+      else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeCmdk(); }
+    });
+    $("#cmdkList").addEventListener("click", e => { const b = e.target.closest("[data-ck]"); if (b) pickCmdk(CK.items[+b.dataset.ck]); });
+    $("#cmdkList").addEventListener("mousemove", e => { const b = e.target.closest("[data-ck]"); if (b && +b.dataset.ck !== CK.sel) { CK.sel = +b.dataset.ck; paintSel(); } });
+  }
+  const idx = Object.entries(S.rows).map(([id, r]) => { const sh = S.sheets[r.sheetId]; if (!sh) return null; const tc = titleCol(sh), sc = statusCol(sh);
+    return {id, sid: r.sheetId, trk: tid(sh), title: (r.cells || {})[tc?.id] || "Untitled entry", status: sc ? (r.cells || {})[sc.id] : "", text: Object.values(r.cells || {}).join(" \u2003 "), low: Object.values(r.cells || {}).join(" ").toLowerCase()}; }).filter(Boolean);
+  CK = {idx, sel: 0, items: []};
+  $("#cmdkIn").value = ""; $("#cmdkIn").placeholder = `Search ${curTracker()?.name || "entries"}, jump to a sheet, or run an action…`; $("#cmdkAll").checked = false;
+  $("#cmdk").hidden = false; drawCmdk(); setTimeout(() => $("#cmdkIn").focus(), 20);
+}
+function closeCmdk() { if ($("#cmdk")) $("#cmdk").hidden = true; CK = null; }
+function hl(text, toks) { let h = esc(text); toks.forEach(t => { if (t.length > 1) h = h.replace(new RegExp("(" + esc(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"), "<mark>$1</mark>"); }); return h; }
+function snippet(text, tok) { const i = text.toLowerCase().indexOf(tok); if (i < 0) return text.slice(0, 120); const a = Math.max(0, i - 50); return (a ? "…" : "") + text.slice(a, a + 140) + (a + 140 < text.length ? "…" : ""); }
+function drawCmdk() {
+  const q = $("#cmdkIn").value.trim().toLowerCase(), toks = q.split(/\s+/).filter(Boolean), all = $("#cmdkAll").checked, ct = curTracker()?.id;
+  const sheets = allSheets().filter(sh => (all || tid(sh) === ct) && (!toks.length || toks.every(t => sh.name.toLowerCase().includes(t)))).slice(0, toks.length ? 6 : 8).map(sh => ({kind: "sheet", sh}));
+  const acts = ckActions().filter(a => !toks.length || toks.every(t => a.label.toLowerCase().includes(t))).slice(0, toks.length ? 5 : 6);
+  const rows = toks.length ? CK.idx.filter(x => (all || x.trk === ct) && toks.every(t => x.low.includes(t))).slice(0, 40).map(x => ({kind: "row", x})) : [];
+  CK.items = [...rows, ...sheets, ...acts];
+  const grp = (title, list, off) => list.length ? `<div class="ck-h">${title}</div>` + list.map((it, k) => { const i = off + k;
+    if (it.kind === "row") { const sh = S.sheets[it.x.sid], tr = trackerList().find(t => t.id === it.x.trk); return `<button type="button" class="ck-it" data-ck="${i}" role="option"><span class="ck-ic">${ICON.edit}</span><span class="ck-main"><b>${hl(it.x.title, toks)}</b><small>${all && tr ? esc(tr.name) + " · " : ""}${esc(sh?.name || "")}${it.x.status ? ` · <span class="pill t-${tone(it.x.status)}">${esc(it.x.status)}</span>` : ""}</small><span class="ck-snip">${hl(snippet(it.x.text, toks[0]), toks)}</span></span></button>`; }
+    if (it.kind === "sheet") { const tr = trackerList().find(t => t.id === tid(it.sh)); return `<button type="button" class="ck-it" data-ck="${i}" role="option"><span class="ck-ic"><i class="dot" style="background:${esc(it.sh.color || trackerColor(tr))}"></i></span><span class="ck-main"><b>${hl(it.sh.name, toks)}</b><small>${esc(tr?.name || "")} · ${rowsOf(it.sh.id).length} entries</small></span></button>`; }
+    return `<button type="button" class="ck-it" data-ck="${i}" role="option"><span class="ck-ic">›</span><span class="ck-main"><b>${hl(it.label, toks)}</b></span>${it.k ? `<span class="kbd">${esc(it.k)}</span>` : ""}</button>`; }).join("") : "";
+  $("#cmdkList").innerHTML = (grp(`Entries${rows.length === 40 ? " (first 40)" : ""}`, rows, 0) + grp("Sheets", sheets, rows.length) + grp("Actions", acts, rows.length + sheets.length)) || `<div class="ck-empty">Nothing matches “${esc(q)}”.${all ? "" : " Tick <b>All projects</b> to search every bank."}</div>`;
+  paintSel();
+}
+function paintSel() { document.querySelectorAll("#cmdkList .ck-it").forEach(b => b.setAttribute("aria-selected", String(+b.dataset.ck === CK.sel))); document.querySelector('#cmdkList .ck-it[aria-selected="true"]')?.scrollIntoView({block: "nearest"}); }
+function pickCmdk(it) {
+  if (!it) return; closeCmdk();
+  if (it.kind === "act") { runAct(it.act); return; }
+  const sid = it.kind === "row" ? it.x.sid : it.sh.id, sh = S.sheets[sid]; if (!sh) return;
+  if (tid(sh) !== curTracker()?.id) setTracker(tid(sh));
+  S.view = "sheet"; S.sheetId = sid; S.q = ""; render(); window.scrollTo(0, 0);
+  if (it.kind === "row") { const el = document.getElementById("row-" + it.x.id); if (el) { el.scrollIntoView({block: "center"}); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1600); } openDrawer(sid, it.x.id); }
+}
+function openKeys() {
+  const K = [["Ctrl K", "Search everything (entries, sheets, actions)"], ["/", "Search this sheet"], ["N", "New entry"], ["Ctrl Enter", "Save the open entry"], ["Esc", "Close a window"], ["[", "Hide / show the side menu"], ["F", "Full screen"], ["Alt → / Alt ←", "Next / previous sheet"], ["Ctrl Z", "Undo"], ["Ctrl V", "Paste rows from Excel"], ["Ctrl S", "Save Excel-style grid edits"]];
+  openDialog({eyebrow: "Help", title: "Keyboard shortcuts", saveLabel: "Done", body: () => `<div class="keys">${K.map(([k, d]) => `<div class="keyrow"><span>${k.split(" ").map(x => `<span class="kbd">${esc(x)}</span>`).join(" ")}</span><span>${esc(d)}</span></div>`).join("")}</div>`, onSave: () => {}});
+}
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) { e.preventDefault(); e.stopPropagation(); if ($("#cmdk") && !$("#cmdk").hidden) closeCmdk(); else openCmdk(); }
+  else if (e.key === "?" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) && $("#dlg").hidden && $("#modal").hidden && !drawerOpen()) { e.preventDefault(); openKeys(); }
+}, true);
 
 /* ---------- Toast + confetti ---------- */
 let tT; function toast(msg, withUndo) {
