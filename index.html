@@ -841,10 +841,8 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "905056124165",
   appId: "1:905056124165:web:e56034dcc64a22364ecb6c"
 };
-/* Folder name inside each user's private space (users/<uid>/<DATA_ROOT>). */
+/* Folder inside the database where the tracker data lives. */
 window.DATA_ROOT = "tracker";
-/* Sign out automatically after this many minutes without activity (0 = never). */
-window.IDLE_SIGNOUT_MINUTES = 60;
 /* AI assistant (Google Gemini). Each person adds their own API key in AI → Settings; it is stored only in their browser. */
 window.AI_FEATURES = true;
 </script>
@@ -931,7 +929,7 @@ window.AI_FEATURES = true;
 </div>
 
 <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
-<div class="gate" id="gate"><div class="card" id="gateCard"><div class="brand-mark" style="width:44px;height:44px">BT</div><h1>Bank Project Tracker</h1><p>Checking your sign-in…</p></div></div>
+<div class="gate" id="gate" hidden><div class="card" id="gateCard"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <canvas id="confetti"></canvas>
 
@@ -1033,25 +1031,21 @@ function showSetup(msg) {
   $("#cfgSave").onclick = () => { const c = parseCfgText($("#cfgIn").value); if (!c) return showSetup("That doesn't look like a Firebase config. Copy the whole { … } block."); if (!c.databaseURL) return showSetup("The config has no databaseURL. Create a Realtime Database first, then copy the config again."); try { localStorage.setItem("fb-config", JSON.stringify(c)); } catch (e) {} location.reload(); };
 }
 function showSignIn(msg, ok, closable) {
-  gate(`${closable ? `<button class="icon" type="button" id="gClose" aria-label="Close" style="align-self:flex-end;margin:-12px -12px -30px 0">✕</button>` : ""}<div class="brand-mark" style="width:44px;height:44px">BT</div><h1>${closable ? "Sign in to show your name" : "Bank Project Tracker"}</h1><p>${closable ? "Optional. Your edits will show your name instead of “Guest”." : "Sign in to open your trackers. Your data is private to your account."}</p>
+  gate(`${closable ? `<button class="icon" type="button" id="gClose" aria-label="Close" style="align-self:flex-end;margin:-12px -12px -30px 0">✕</button>` : ""}<div class="brand-mark" style="width:44px;height:44px">BT</div><h1>${closable ? "Sign in to show your name" : "Bank Project Tracker"}</h1><p>${closable ? "Optional. Your edits will show your name instead of “Guest”." : "Sign in to open your trackers. Changes save to the shared database instantly."}</p>
     <button class="btn primary" type="button" id="gIn"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3Z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"/><path fill="#fff" opacity=".7" d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9.1L6.4 14Z"/><path fill="#fff" opacity=".55" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5L6.4 10C7.2 7.7 9.4 5.9 12 5.9Z"/></svg> Continue with Google</button>
     <div class="or">or email</div>
     <input class="inp" id="eMail" type="email" placeholder="you@company.com" autocomplete="username">
     <input class="inp" id="ePass" type="password" placeholder="Password (min 6 characters)" autocomplete="current-password">
     <div class="row2" style="flex:none"><button class="btn" type="button" id="eIn">Sign in</button><button class="btn ghost" type="button" id="eUp">Create account</button></div>
-    <label class="ck" style="font-size:13px"><input type="checkbox" id="eKeep" ${keepSignedIn() ? "checked" : ""}> Keep me signed in on this device</label>
     <button class="stamp" type="button" id="eReset" style="align-self:flex-start">Forgot password?</button>
     ${msg ? `<div class="${ok ? "ok" : "err"}">${esc(msg)}</div>` : ""}
 `);
   const auth = firebase.auth(), em = () => $("#eMail").value.trim(), pw = () => $("#ePass").value;
-  $("#eKeep").onchange = e => { try { localStorage.setItem("bt-keep", e.target.checked ? "1" : "0"); } catch (x) {} };
-  const persist = () => auth.setPersistence(keepSignedIn() ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION).catch(() => {});
   $("#gClose")?.addEventListener("click", () => { $("#gate").hidden = true; });
   const fail = e => showSignIn(({"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"No account with that email. Use Create account.","auth/email-already-in-use":"That email already has an account. Sign in instead.","auth/weak-password":"Use at least 6 characters.","auth/unauthorized-domain":"This website isn't on the Firebase authorized domains list. Add it under Authentication → Settings → Authorized domains.","auth/popup-closed-by-user":"Sign-in window was closed.","auth/operation-not-allowed":"This sign-in method is off. Turn it on in Firebase → Authentication → Sign-in method.","auth/admin-restricted-operation":"New accounts are switched off. In Firebase → Authentication → Settings → User actions, tick Enable create (sign-up).","auth/invalid-email":"Enter a valid email address.","auth/too-many-requests":"Too many attempts. Wait a minute and try again."})[e.code] || e.message, false, closable);
-  $("#gIn").onclick = () => persist().then(() => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())).catch(e => e.code === "auth/popup-blocked" ? auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()) : fail(e));
-  $("#eIn").onclick = () => persist().then(() => auth.signInWithEmailAndPassword(em(), pw())).catch(fail);
-  $("#eUp").onclick = () => persist().then(() => auth.createUserWithEmailAndPassword(em(), pw())).catch(fail);
-  $("#ePass").addEventListener("keydown", e => { if (e.key === "Enter") $("#eIn").click(); });
+  $("#gIn").onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => e.code === "auth/popup-blocked" ? auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()) : fail(e));
+  $("#eIn").onclick = () => auth.signInWithEmailAndPassword(em(), pw()).catch(fail);
+  $("#eUp").onclick = () => auth.createUserWithEmailAndPassword(em(), pw()).catch(fail);
   $("#eReset").onclick = () => em() ? auth.sendPasswordResetEmail(em()).then(() => showSignIn("Password reset email sent.", true)).catch(fail) : showSignIn("Type your email first.");
 }
 async function init() {
@@ -1061,82 +1055,19 @@ async function init() {
   if (!cfg) { showSetup(); return; }
   try { firebase.initializeApp(cfg); } catch (e) { showSetup("Firebase rejected that config: " + e.message); return; }
   const auth = firebase.auth(); FB = firebase.database();
+  try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) {}
   auth.getRedirectResult().catch(() => {});
   let started = false;
   auth.onAuthStateChanged(user => {
-    if (LEAVING) return;
-    if (!user || user.isAnonymous) {
-      if (started) { wipeAndReload(); return; }  // signed out elsewhere (another tab, idle timeout, revoked): never keep data on screen
-      $("#userChip").hidden = true; ME = null;
-      let msg = ""; try { msg = sessionStorage.getItem("bt-msg") || ""; sessionStorage.removeItem("bt-msg"); } catch (e) {}
-      showSignIn(msg, !!msg); return;
-    }
-    if (started && ME && ME.uid !== user.uid) { wipeAndReload(); return; }
+    if (!user || user.isAnonymous) { $("#userChip").hidden = true; ME = null; showSignIn(); return; }
     ME = user; $("#gate").hidden = true; $("#userChip").hidden = false; $("#userEmail").textContent = user.email || user.displayName || "Signed in";
     $("#signOutBtn").textContent = "Sign out";
-    if (!started) { started = true; startSync(); startSession(); }
+    if (!started) { started = true; startSync(); }
   });
-  $("#signOutBtn").onclick = () => confirmSignOut();
+  $("#signOutBtn").onclick = () => auth.signOut().then(() => location.reload());
 }
-/* ---------- Session handling ---------- */
-function keepSignedIn() { try { return localStorage.getItem("bt-keep") !== "0"; } catch (e) { return true; } }
-let SYNC_REFS = [], GUARD = false, LEAVING = false;
-function wipeAndReload(msg) {
-  try { SYNC_REFS.forEach(r => r.off()); } catch (e) {}
-  S.trackers = {}; S.sheets = {}; S.rows = {}; S.view = "home"; S.sheetId = null; ME = null;
-  try { document.querySelectorAll(".main, .nav, #trkPop, #drForm, #dBody").forEach(e => e.innerHTML = ""); document.querySelector(".app").style.display = "none"; } catch (e) {}
-  try { localStorage.removeItem("bcp-tracker-v1"); localStorage.removeItem("bcp-tracker-current"); if (msg) sessionStorage.setItem("bt-msg", msg); } catch (e) {}
-  LEAVING = true; location.replace(location.pathname + location.search);
-}
-async function doSignOut(msg) {
-  LEAVING = true;
-  try { SYNC_REFS.forEach(r => r.off()); } catch (e) {}
-  try { await firebase.auth().signOut(); } catch (e) {}
-  wipeAndReload(msg || "You've signed out.");
-}
-function confirmSignOut(fromBack) {
-  openDialog({
-    eyebrow: ME?.email || "Account", title: fromBack ? "Leave the tracker?" : "Sign out?", saveLabel: fromBack ? "Stay here" : "Sign out",
-    body: () => `<p style="margin:0">${fromBack ? "You pressed Back. Do you want to sign out before you leave? Anyone using this browser afterwards would otherwise still be signed in to your trackers." : "You'll need to sign in again to see your trackers. Your data stays safe in your account."}</p>
-      ${pending ? `<div class="banner" style="margin-top:10px">${pending} change${pending === 1 ? " is" : "s are"} still saving. Wait a moment before signing out.</div>` : ""}
-      ${fromBack ? `<div class="row2" style="flex:none;margin-top:14px;flex-wrap:wrap"><button class="btn danger" type="button" id="soLeave" style="flex:none">Sign out and leave</button><button class="btn" type="button" id="soStay" style="flex:none">Leave, stay signed in</button></div>` : ""}`,
-    mount: root => {
-      root.querySelector("#soLeave")?.addEventListener("click", async () => { closeDialog(true); LEAVING = true; await doSignOutAndBack(); });
-      root.querySelector("#soStay")?.addEventListener("click", () => { closeDialog(true); LEAVING = true; history.back(); setTimeout(() => { if (document.visibilityState === "visible" && ME) { LEAVING = false; armGuard(); toast("There's no earlier page in this tab. Close the tab to leave."); } }, 700); });
-    },
-    onCancel: () => { if (fromBack) armGuard(); },
-    onSave: async () => { if (fromBack) { armGuard(); return; } closeDialog(true); await doSignOut(); return false; }
-  });
-}
-async function doSignOutAndBack() {
-  try { SYNC_REFS.forEach(r => r.off()); } catch (e) {}
-  try { await firebase.auth().signOut(); } catch (e) {}
-  try { document.querySelectorAll(".main, .nav, #trkPop, #drForm, #dBody").forEach(e => e.innerHTML = ""); document.querySelector(".app").style.display = "none"; localStorage.removeItem("bcp-tracker-v1"); sessionStorage.setItem("bt-msg", "You've signed out."); } catch (e) {}
-  history.back();
-  setTimeout(() => location.replace(location.pathname + location.search), 700);  // no earlier page: show the sign-in screen
-}
-function armGuard() { if (!GUARD) return; try { history.pushState({bt: 1}, "", location.href); } catch (e) {} }
-function startSession() {
-  // Back-button guard: one extra history entry; pressing Back asks before leaving
-  GUARD = true; armGuard();
-  window.addEventListener("popstate", () => { if (LEAVING || !ME) return; if (!$("#dlg").hidden) closeDialog(true); confirmSignOut(true); });
-  // Unsaved writes → browser's own "leave site?" prompt
-  window.addEventListener("beforeunload", e => { if (!LEAVING && pending > 0) { e.preventDefault(); e.returnValue = ""; } });
-  // Inactivity sign-out
-  const mins = +(window.IDLE_SIGNOUT_MINUTES ?? 60);
-  if (mins > 0) {
-    let last = Date.now(); const bump = () => { last = Date.now(); try { localStorage.setItem("bt-active", String(last)); } catch (e) {} };
-    ["pointerdown", "keydown", "wheel", "touchstart"].forEach(ev => window.addEventListener(ev, bump, {passive: true, capture: true}));
-    bump();
-    setInterval(() => { let shared = last; try { shared = Math.max(last, +localStorage.getItem("bt-active") || 0); } catch (e) {}
-      if (ME && Date.now() - shared > mins * 60000) doSignOut(`Signed out after ${mins} minutes of inactivity.`); }, 30000);
-  }
-}
-// Back/forward cache: a page restored after sign-out must re-check the session, never show old data
-window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 function startSync() {
-  const BASE = `users/${ME.uid}/${ROOT}`;
-  const ref = p => FB.ref(`${BASE}/${p}`);
+  const ref = p => FB.ref(`${ROOT}/${p}`);
   const clean = d => JSON.parse(JSON.stringify(d));
   store = { mode: "cloud",
     async put(kind, id, data) { S[kind][id] = data; bumpPending(1); const c = clean(data); if (kind === "rows" && ME) c.updatedBy = ME.email || ME.displayName || "Signed-in user"; try { await ref(`${kind}/${id}`).set(c); } catch (e) { toast("Couldn't save: " + (e.code === "PERMISSION_DENIED" ? "your account doesn't have write access" : e.message)); } finally { bumpPending(-1); } },
@@ -1148,34 +1079,19 @@ function startSync() {
   let rT = null; const soon = () => { clearTimeout(rT); rT = setTimeout(render, 40); };
   FB.ref(".info/connected").on("value", s => { online = !!s.val(); if (S.ready) setSync(online ? (pending ? "saving" : "ok") : "offline", online ? (pending ? "Saving…" : "Live · all changes saved") : "Offline · changes sync when you reconnect"); });
   for (const kind of ["trackers", "sheets", "rows"]) {
-    SYNC_REFS.push(ref(kind));
     ref(kind).on("value", snap => {
       const map = snap.val() || {};
       if (kind === "sheets") Object.values(map).forEach(sh => { sh.columns = Array.isArray(sh.columns) ? sh.columns : Object.values(sh.columns || {}); sh.columns.forEach(c => { if (c.type === "select") c.options = Array.isArray(c.options) ? c.options : Object.values(c.options || {}); }); });
       if (kind === "rows") Object.values(map).forEach(r => { r.cells = r.cells || {}; });
       if (kind === "trackers") Object.values(map).forEach(t => { if (t.holidays && !Array.isArray(t.holidays)) t.holidays = Object.values(t.holidays); });
       S[kind] = map; got[kind] = true;
-      if (got.sheets && got.rows && got.trackers && !S.ready) { clearTimeout(timer); S.ready = true; setSync("ok", "Live · all changes saved"); offerLegacyCopy(BASE); }
+      if (got.sheets && got.rows && got.trackers && !S.ready) { clearTimeout(timer); S.ready = true; setSync("ok", "Live · all changes saved"); }
       if (S.sheetId && !S.sheets[S.sheetId] && got.sheets) { S.view = "home"; S.sheetId = null; }
       if (!drawerOpen() && !CP && !CM && !gridHasFocus() && $("#dlg").hidden && $("#modal").hidden) soon(); else renderNav();
-    }, err => { clearTimeout(timer); setSync("offline", err.code === "PERMISSION_DENIED" ? "No access · check database rules" : "Sync stopped: " + err.message); S.ready = true; render(); if (err.code === "PERMISSION_DENIED") toast("Your account can't open its data. Publish the database rules from README step 1.3 (private per user)."); });
+    }, err => { clearTimeout(timer); setSync("offline", err.code === "PERMISSION_DENIED" ? "No access · check database rules" : "Sync stopped: " + err.message); S.ready = true; render(); if (err.code === "PERMISSION_DENIED") toast("Your account can't read this database. Ask the owner to allow your email in the database rules."); });
   }
 }
 function bumpPendingCloud() {}
-/* One-time: copy data from the old shared folder into this account's private folder */
-async function offerLegacyCopy(BASE) {
-  if (Object.keys(S.sheets).length || Object.keys(S.trackers).length) return;
-  const skipKey = "bt-legacy-skip-" + ME.uid; try { if (localStorage.getItem(skipKey)) return; } catch (e) {}
-  let old; try { old = (await FB.ref(ROOT).once("value")).val(); } catch (e) { return; }  // no access = nothing to offer
-  if (!old || !old.sheets) return;
-  const n = k => Object.keys(old[k] || {}).length;
-  openDialog({
-    eyebrow: "Private data", title: "Copy your existing trackers into your account?", saveLabel: "Copy into my account",
-    body: () => `<p style="margin:0">Your account now has its own private space, and it's empty. Data from the old shared version was found: <b>${n("trackers")} trackers, ${n("sheets")} sheets, ${n("rows")} entries</b>.</p><p class="hint" style="margin:10px 0 0">Only copy it if this data is yours. After copying, publish the final database rules (README step 1.3) so nobody else can read the old shared copy.</p>`,
-    onCancel: () => { try { localStorage.setItem(skipKey, "1"); } catch (e) {} },
-    onSave: async () => { setSync("saving", "Copying…"); try { await FB.ref(BASE).set(old); toast(`Copied ${n("sheets")} sheets and ${n("rows")} entries into your account`); } catch (e) { toast("Couldn't copy: " + (e.code === "PERMISSION_DENIED" ? "publish the rules from README step 1.3 first" : e.message)); } }
-  });
-}
 /* ---------- Derived ---------- */
 const TCOLORS = ["#0C8565","#2F5DA8","#B4532A","#7A5CC2","#1B9AAA","#C2577A","#6B8E23","#A6640A"];
 function trackerList() {
