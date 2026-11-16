@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- GitHub Pages version: Firebase sign-in, private data, sharing and collaborative editing. Settings live in js/config.js. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0C2A25">
+<title>Bank Project Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="js/vendor/xlsx.bundle.js"></script>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<script src="js/config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidescrim" id="sideScrim"></div>
+  <aside class="side" aria-label="Sheets">
+    <div class="trk">
+      <button class="trk-btn" id="trkBtn" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-mark" id="trkMark">…</span><span style="min-width:0"><b id="trkName">Loading…</b><small>Switch tracker ▾</small></span></button>
+      <div class="trk-pop" id="trkPop" hidden></div>
+    </div>
+    <nav class="nav" id="navHome"></nav>
+    <div class="side-label"><span>Sheets</span></div>
+    <nav class="nav" id="nav"></nav>
+    <button class="side-add" id="addSheetBtn" type="button">+ New sheet</button>
+    <div class="side-foot">
+      <span class="sync" id="sync" data-s="local"><i></i><span id="syncTxt">Connecting…</span></span>
+      <span class="userchip" id="userChip" hidden><span id="userEmail"></span><button type="button" id="signOutBtn">Sign out</button></span>
+      <button class="side-add" type="button" data-act="theme" style="margin:0;border-style:solid;font-weight:600"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.5-1.1-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.1-4-7.5-9-7.5Z"/></svg> Theme &amp; appearance</button>
+      <button type="button" class="keysbtn" data-act="keys"><span class="kbd">?</span> Keyboard shortcuts</button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-labelledby="drTitle">
+  <div class="dr-head" style="position:relative">
+    <span class="eyebrow" id="drEyebrow"></span>
+    <h2 id="drTitle"></h2>
+    <button type="button" class="btn" id="drImp" aria-pressed="false" style="align-self:flex-start;margin-top:4px"></button>
+    <div class="progress" title="How complete this entry is"><span id="drProg" style="width:0"></span></div>
+    <button class="icon x" id="drClose" type="button" aria-label="Close">✕</button>
+  </div>
+  <form class="dr-body" id="drForm" autocomplete="off"></form>
+  <div class="dr-foot">
+    <button class="btn danger" id="drDelete" type="button">Delete</button>
+    <button class="btn ghost" id="drDup" type="button">Duplicate</button>
+    <span class="sp"></span>
+    <span class="hint" id="drHint">Ctrl + Enter to save</span>
+    <button class="btn" id="drSaveNext" type="button">Save &amp; add another</button>
+    <button class="btn primary" id="drSave" type="button">Save entry</button>
+  </div>
+</aside>
+
+<div class="modal" id="modal" hidden role="dialog" aria-labelledby="mTitle">
+  <div class="mbox">
+    <div class="dr-head" style="position:relative">
+      <span class="eyebrow" id="mEyebrow">New sheet</span>
+      <h2 id="mTitle">Design your sheet</h2>
+      <button class="icon x" id="mClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="dr-body" id="mBody"></div>
+    <div class="dr-foot">
+      <button class="btn danger" id="mDelete" type="button">Delete sheet</button>
+      <span class="sp"></span>
+      <button class="btn ghost" id="mCancel" type="button">Cancel</button>
+      <button class="btn primary" id="mSave" type="button">Create sheet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="dlg" hidden role="dialog" aria-labelledby="dTitle">
+  <div class="mbox">
+    <div class="dr-head" style="position:relative">
+      <span class="eyebrow" id="dEyebrow"></span>
+      <h2 id="dTitle"></h2>
+      <button class="icon x" id="dClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="dr-body" id="dBody"></div>
+    <div class="dr-foot">
+      <button class="btn danger" id="dDelete" type="button" hidden>Delete</button>
+      <span class="sp"></span>
+      <button class="btn ghost" id="dCancel" type="button">Cancel</button>
+      <button class="btn primary" id="dSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+<div class="gate" id="gate"><div class="card" id="gateCard"><div class="brand-mark" style="width:44px;height:44px">BT</div><h1>Bank Project Tracker</h1><p>Checking your sign-in…</p></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas id="confetti"></canvas>
+
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/dashboard-export.js"></script>
+<script src="js/ai-dashboard.js"></script>
+
+</body>
+</html>
